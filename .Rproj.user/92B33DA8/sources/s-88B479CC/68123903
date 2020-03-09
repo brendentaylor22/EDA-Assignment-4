@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1583766754482.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2663002528",
+    "id" : "68123903",
+    "lastKnownWriteTime" : 1583766797,
+    "last_content_update" : 1583766797600,
+    "path" : "~/Masters - Local/EDA/Assignments/Assignment-4/RMD/EDA Assignment 4 - TYLBRE007.Rmd",
+    "project_path" : "RMD/EDA Assignment 4 - TYLBRE007.Rmd",
+    "properties" : {
+        "cursorPosition" : "25,22",
+        "scrollLine" : "5",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

@@ -1,0 +1,26 @@
+---
+output:
+  bookdown::pdf_book:
+    toc: true
+    toc_depth: 3
+    keep_tex: no
+    includes:
+      in_header: "Preamble.tex"
+      before_body: "Title.tex"
+      number_sections: no
+---
+
+<!-- I make use of a LaTeX title page and template document. These are supplied in the ZIP folder but can be commented out if necessary. -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, comment = NA, fig.align = "center", fig.width = 4, fig.height = 4, fig.pos = "H", warning = F)
+```
+
+```{r read_data}
+install.packages("remotes")
+library(remotes)
+remotes::install_github('pzhaonet/ncovr')
+```
+
+\newpage
+\pagenumbering{arabic}
