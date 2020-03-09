@@ -17,6 +17,9 @@ knitr::opts_chunk$set(echo = F, comment = NA, fig.align = "center", fig.width = 
 ```
 
 ```{r read_data}
+install.packages("remotes")
+library(remotes)
+remotes::install_github('pzhaonet/ncovr')
 ```
 
 \newpage
