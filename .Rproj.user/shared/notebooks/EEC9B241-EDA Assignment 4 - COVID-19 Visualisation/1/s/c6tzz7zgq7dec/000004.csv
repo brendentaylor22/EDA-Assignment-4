@@ -1,0 +1,4 @@
+"0","ncov <- ncov %>% mutate(Date = ymd(Date))
+"
+"2","Error in ymd(Date) : could not find function ""ymd""
+"
