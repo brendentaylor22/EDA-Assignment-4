@@ -1,0 +1,6 @@
+"0","#To get only most recent data, either today's data or yesterday's if today's isn't up yet"
+"0","if (max(ncov$Date) != today()) {"
+"0","  date_newest = today()-1"
+"0","}else{date = today()}"
+"0","ncov_newest = ncov %>%"
+"0","  filter(Date == date_newest)"

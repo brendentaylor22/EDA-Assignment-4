@@ -1,0 +1,2 @@
+"0","#Have to use right join so R keeps the sf class"
+"0","dat = right_join(world_dat, ncov_newest, by = c(""name_long"" = ""Country""))"

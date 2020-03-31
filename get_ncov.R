@@ -1,5 +1,5 @@
 # Helper file to download the latest coronavirus data 
-# Note: updated 18/3 to include a new data source. Source 1 is from an organisation that curates "Core" datasets;
+# Note: updated 30/3 to include (updated link to) a new data source. Source 1 is from an organisation that curates "Core" datasets;
 # the data is presented in the same way for every country, and contains fewer extraneous fields.
 # Source 2 is from an individual contributor. Data for China is collected at the province level rather than country level. 
 # This makes cumulating counts over time difficult, because each province is updated at different times, and if you 
@@ -7,25 +7,27 @@
 # province *at that specific time*. Figure out how to do this might be an good wrangling exercise but not the point
 # of the assignment. 
 # Source 1 is strongly recommended but both have all the information you need, and you can use either.
-# Both are working and up-to-date as of 17/3.
+# Both are working and up-to-date as of 30/3.
 
-# SOURCE 1 (STRONGLY RECOMMENDED): https://github.com/datasets/covid-19/blob/master/time-series-19-covid-combined.csv
+# SOURCE 1 (STRONGLY RECOMMENDED): https://github.com/datasets/covid-19
+# you can also download this data from the repo above
 
 library(lubridate)
 library(dplyr)
+library(ggplot2)
 
 # download data directly
-ncov <- read.csv("https://raw.githubusercontent.com/datasets/covid-19/master/time-series-19-covid-combined.csv")
+ncov <- read.csv("https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv")
 # convert Date from factor to date class
 ncov <- ncov %>% mutate(Date = ymd(Date))
 # save
-save(ncov, file = "ncov-20200319.Rdata")
+save(ncov, file = "ncov-20200330.Rdata")
 
 # quick check 
-ncov %>% group_by(Country.Region, Date) %>%
+ncov %>% group_by(Country, Date) %>%
   summarize(cases = sum(Confirmed),
             dead = sum(Deaths)) %>%
-  filter(Country.Region == "China") %>%
+  filter(Country == "China") %>%
   ggplot(aes(x = Date, y = cases)) + geom_line()
 
 # SOURCE 2 (NOT RECOMMENDED): https://github.com/pzhaonet/ncovr
