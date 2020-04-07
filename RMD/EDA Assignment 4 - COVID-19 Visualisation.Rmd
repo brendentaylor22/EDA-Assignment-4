@@ -38,7 +38,10 @@ world_dat = world %>%
 palest = world_dat %>%
   filter(name_long == "Palestine")
 
-world_dat <- as.data.frame(ne_countries(scale = "medium", returnclass = "sf"))
+colnames(palest) = c("sovereignt", "continent", "region_un", "subregion", "pop_est", "geometry")
+
+world_dat = ne_countries(scale = "medium", returnclass = "sf")
+world
 
 ```
 
