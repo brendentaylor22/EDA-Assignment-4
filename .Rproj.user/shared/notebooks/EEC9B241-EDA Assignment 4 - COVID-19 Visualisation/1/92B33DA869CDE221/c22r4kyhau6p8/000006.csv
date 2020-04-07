@@ -1,0 +1,6 @@
+"0","ncov_newest = dat %>%
+  filter(Date == date_newest)
+"
+"2","Error in UseMethod(""filter_"") : 
+  no applicable method for 'filter_' applied to an object of class ""c('matrix', 'list')""
+"

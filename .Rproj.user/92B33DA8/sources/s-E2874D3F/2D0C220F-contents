@@ -1,0 +1,622 @@
+---
+output:
+  bookdown::pdf_book:
+    keep_tex: yes
+    includes:
+      in_header: "Preamble.tex"
+      before_body: "Title.tex"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, comment = NA)
+options(tinytex.verbose = TRUE)
+```
+
+\newpage
+# Part 1
+## Extract the data
+
+```{r install_packages, echo = F, message = F}
+#install the required packages
+library(tidyverse)
+library(WDI)
+library(countrycode)
+library(knitr)
+library(kableExtra)
+library(ggplot2)
+library(reshape2)
+```
+
+We begin by reading the data in as tibbles.
+```{r read_data, message = F}
+#Read in the data
+happ_2015 = read_csv("2015.csv")
+happ_2016 = read_csv("2016.csv")
+happ_2017 = read_csv("2017.csv")
+happ_2018 = read_csv("2018.csv")
+happ_2019 = read_csv("2019.csv")
+```
+
+## Checking the Data
+We now check the structure of the data using `glimpse()`, and the `tail()` (since `glimpse()` includes the first few observations). This is only done for the 2015 for the sake of simplicity.
+
+### 2015
+```{r check_2015}
+glimpse(happ_2015) #Check the first few observations as well as the structure
+tail(happ_2015, 3) #Check the last observation
+```
+
+```{r check_2016, eval=F}
+glimpse(happ_2016)
+tail(happ_2016, 3)
+```
+
+```{r check_2017, eval = F}
+glimpse(happ_2017)
+tail(happ_2017, 3)
+```
+
+```{r check_2018, , eval = F}
+glimpse(happ_2018)
+tail(happ_2018, 3)
+```
+
+```{r check_2019, , eval = F}
+glimpse(happ_2019)
+tail(happ_2019, 3)
+```
+
+### Discussion
+Glimpsing at the data we can see:
+
+* The number of observations per year varies between `r min(c(dim(happ_2015)[1], dim(happ_2016)[1], dim(happ_2017)[1], dim(happ_2018)[1], dim(happ_2019)[1]))` and `r max(c(dim(happ_2015)[1], dim(happ_2016)[1], dim(happ_2017)[1], dim(happ_2018)[1], dim(happ_2019)[1]))`.
+* The number of variables per year varies between `r min(c(dim(happ_2015)[2], dim(happ_2016)[2], dim(happ_2017)[2], dim(happ_2018)[2], dim(happ_2019)[2]))` and `r max(c(dim(happ_2015)[2], dim(happ_2016)[2], dim(happ_2017)[2], dim(happ_2018)[2], dim(happ_2019)[2]))`.
+* Variables sometimes have different names.
+* Some variables are of the wrong type. Specifically, `Perceptions of Corruption` from 2018's data is listed as type `character` when it should be a `double`. Further investigation reveals that the value for this variable for the UAE is "N/A", as a character string, and not `NA` or `NULL` as one would expect if the value were left blank. 
+  + This will need to be fixed before joining the tibbles, and can be done using `as.numeric()` as this will introduce `NA`'s by coercion wherever it runs into a character string.
+
+```{r rm_na, include=FALSE}
+#Convert perecptions of corruption to numeric to force text NAs into R NAs
+happ_2018$`Perceptions of corruption` = as.numeric(happ_2018$`Perceptions of corruption`)
+```
+
+## Joining the Data
+
+### Matching the Datasets' Formats
+
+It is first easiest if we make sure the datasets have the same column names etc., before joining or manipulating them to avoid any problems and make things easier for ourselves. The column names I will be using are:
+
+* `country`
+* `region` for the region the country falls into
+* `rank` for the rank of the country according to its happiness score
+* `score` for the happiness score of the country
+* `se` for the standard error of the score
+* `gdp_per_cap` for the GDP per capita of the country
+* The remainder give the values of the extent to which each of the factors contributes to the calculation of the happiness score:
+  + `family`
+  + `life_exp` for life expectacnty
+  + `freedom`
+  + `gov_corr` for government corruption
+  + `gener` for generosity
+  + `res` for dystopia residuals
+
+
+```{r rename_cols}
+#Rename columns in each dataset so that joining will be made easier i.e. same column names where appropriate
+#2015
+happ_2015 = happ_2015 %>%
+  rename(country = Country, 
+         region = Region, 
+         rank = `Happiness Rank`, 
+         se = `Standard Error`, 
+         score = `Happiness Score`,
+         gdp_per_cap = `Economy (GDP per Capita)`,
+         family = Family,
+         life_exp = `Health (Life Expectancy)`,
+         freedom = Freedom,
+         gov_corr = `Trust (Government Corruption)`,
+         gener = Generosity,
+         res = `Dystopia Residual`)
+
+#Convert country into Title Case. This is because there was 'Somaliland region' and 'Somaliland Region'
+happ_2015 = happ_2015 %>%
+  mutate(country = str_to_title(country))
+
+#2016
+happ_2016 = happ_2016 %>%
+  rename(country = Country, 
+         region = Region, 
+         rank = `Happiness Rank`, 
+         lower_conf = `Lower Confidence Interval`,
+         upper_conf = `Upper Confidence Interval`,
+         score = `Happiness Score`,
+         gdp_per_cap = `Economy (GDP per Capita)`,
+         family = Family,
+         life_exp = `Health (Life Expectancy)`,
+         freedom = Freedom,
+         gov_corr = `Trust (Government Corruption)`,
+         gener = Generosity,
+         res = `Dystopia Residual`)
+
+#2017
+happ_2017 = happ_2017 %>%
+  rename(country = Country, 
+         rank = Happiness.Rank, 
+         score = Happiness.Score,
+         gdp_per_cap = Economy..GDP.per.Capita.,
+         family = Family,
+         life_exp = Health..Life.Expectancy.,
+         freedom = Freedom,
+         gov_corr = Trust..Government.Corruption.,
+         gener = Generosity,
+         res = Dystopia.Residual, 
+         whisker_high = Whisker.high,
+         whisker_low = Whisker.low)
+
+#2018
+happ_2018 = happ_2018 %>%
+  rename(country = `Country or region`, 
+         rank = `Overall rank`, 
+         score = Score,
+         gdp_per_cap = `GDP per capita`,
+         life_exp = `Healthy life expectancy`,
+         freedom = `Freedom to make life choices`,
+         gov_corr = `Perceptions of corruption`,
+         gener = Generosity,
+         social = `Social support`)
+
+#2019
+happ_2019 = happ_2019 %>%
+  rename(country = `Country or region`, 
+         rank = `Overall rank`, 
+         score = Score,
+         gdp_per_cap = `GDP per capita`,
+         life_exp = `Healthy life expectancy`,
+         freedom = `Freedom to make life choices`,
+         gov_corr = `Perceptions of corruption`,
+         gener = Generosity,
+         social = `Social support`)
+```
+
+
+<!-- Mention SE vs lower and upper confidence level of 2016 -->
+<!-- Mention whisker of 2017 -->
+<!-- Country and region in 2018 -->
+
+Next, we add a column with the year to each dataset so that we can identify which year each observation came from after joining the dataset.
+
+```{r add_year}
+#Mututate each dataset to add column of the year. Will help once joined.
+#2015
+happ_2015 = happ_2015 %>%
+  mutate(year = 2015)
+
+#2016
+happ_2016 = happ_2016 %>%
+  mutate(year = 2016)
+
+#2017
+happ_2017 = happ_2017 %>%
+  mutate(year = 2017)
+
+#2018
+happ_2018 = happ_2018 %>%
+  mutate(year = 2018)
+
+#2019
+happ_2019 = happ_2019 %>%
+  mutate(year = 2019)
+```
+
+
+### Tidying the Data
+
+Before joining the datasets, we must ensure they are tidy. This involves:
+
+1. Each variable having its own column.
+2. Each observation having its own row.
+3. Each value having its own cell.
+
+Looking at the datasets, we can see that each variable does indeed have its own column.
+
+In order to check that each observation has its own row (and that there are no duplicates), we can check that the number of unique countries matches the number of observations. I make use of my own function `check_obs()` for this.
+
+```{r check_obs}
+#Returns true if the number of unique countries is equal to the number of observations
+check_obs = function(df){
+  length(unique(df$country)) == dim(df)[1]
+}
+
+#create list of datasets so I can use sapply
+df_list = list(happ_2015, happ_2016, happ_2017, happ_2018, happ_2019)
+
+#Apply check_obs() to each dataset
+sapply(df_list, check_obs)
+```
+
+The function outputs `TRUE` if the number of unique countries is the same as the number of observations. We can see that each observation does indeed have its own row.
+
+We also know that each value has its own cell, and so we can move onto joining the datasets together.
+
+### Joining the Datasets
+
+Since we have tidied the data nicely, joining is a simple process. We also reorder the columns of the joined dataset `worldhappiness15_19` so it is easier to read.
+
+```{r join}
+#Join all datasets into 1
+worldhappiness15_19 = bind_rows(happ_2015, happ_2016, happ_2017, happ_2018, happ_2019)
+```
+
+We now create a region column for the observations that don't already have a region associated with them. To ensure consistency, the regions and countries are extracted from the datasets that already have a region column.
+
+```{r extract_regions, warning=F}
+#Create new column iso3c and set it equal to a code based on the country
+#Codes are generated using countrycode()
+worldhappiness15_19$iso3c = countrycode(sourcevar = worldhappiness15_19$country, origin = "country.name", destination = "wb")
+
+#A hacky way of getting all regions from the World Bank
+wbd = WDI(country = "all", indicator = "SP.POP.TOTL", extra = T, start = 2009, end = 2009)
+#Select iso3c and the corresponding region
+wbd_regions = wbd %>%
+  select(iso3c, region)
+
+#Join regions list to dataset
+worldhappiness15_19 = left_join(worldhappiness15_19, wbd_regions, by = c("iso3c"))
+
+#Remove duplicate region columns
+worldhappiness15_19 = worldhappiness15_19 %>%
+  select(-region.x) %>%
+  rename(region = region.y)
+
+#Rename Taiwan Province of China to Taiwan
+worldhappiness15_19 = worldhappiness15_19 %>%
+  mutate(country = ifelse(country=="Taiwan Province of China", "Taiwan", country))
+```
+
+```{r}
+#Convert region of character
+worldhappiness15_19$region = as.character(worldhappiness15_19$region)
+
+#Manually set region of some countries that couldn't be done automatically
+worldhappiness15_19 = worldhappiness15_19 %>%
+  mutate(region = ifelse(country=="Somaliland Region", "Sub-Saharan Africa", region)) %>%
+  mutate(region = ifelse(country=="Macedonia", "Europe & Central Asia", region)) %>%
+  mutate(region = ifelse(country=="Taiwan", "East Asia & Pacific", region)) %>%
+  mutate(region = ifelse(country=="North Macedonia", "Europe & Central Asia", region))
+  
+#Set region back to factor
+worldhappiness15_19$region = as.factor(worldhappiness15_19$region)
+```
+
+\newpage
+# Part 2
+## Total Sample Size for Each Year
+
+The number of observations in each year is:
+
+* 2015: `r sum(worldhappiness15_19$year==2015)`
+* 2016: `r sum(worldhappiness15_19$year==2016)`
+* 2017: `r sum(worldhappiness15_19$year==2017)`
+* 2018: `r sum(worldhappiness15_19$year==2018)`
+* 2019: `r sum(worldhappiness15_19$year==2019)`
+
+## Missing Values and Outliers
+To identify any outliers, we will make use of the `boxplot()` function. This function makes use of Tukey's method (i.e. \(1.5 \times \text{IQR}\)) to identify outliers.
+
+### GDP Per Capita
+There are `r sum(is.na(worldhappiness15_19$gdp_per_cap))` `NA` values and `r sum(is.null(worldhappiness15_19$gdp_per_cap))` `NULL` values.
+
+We can confirm this by ordering the data by `GDP per capita` and then looking at the last few observations.
+
+```{r, eval = F}
+#Check last value of dataset
+worldhappiness15_19 %>%
+  arrange(gdp_per_cap) %>%
+  tail(1)
+```
+By default, R will display any `NA` or `NULL` values at the end of a column if the dataset is ordered by that column and so we can see there are no missing values.
+
+It appears that using `sum(is.na(worldhappiness15_19$gdp_per_cap))` for `NA` values and `sum(is.null(worldhappiness15_19$gdp_per_cap))` for `NULL` values is robust enough however.
+
+The following values are identifed as outliers when using Tukey's method:
+
+```{r}
+#Use boxplot statistics to calculate outliers
+#If no outliers, print "None", otherwise print the value of the outlier(s)
+ifelse(length(boxplot.stats(worldhappiness15_19$gdp_per_cap)$out)==0, "None", boxplot.stats(worldhappiness15_19$gdp_per_cap)$out)
+```
+
+
+### Happiness Score
+* `NA` values: `r sum(is.na(worldhappiness15_19$score))`
+* `NULL` values: `r sum(is.null(worldhappiness15_19$score))`
+
+The following values are identifed as outliers when using Tukey's method:
+
+```{r}
+ifelse(length(boxplot.stats(worldhappiness15_19$score)$out)==0, "None", boxplot.stats(worldhappiness15_19$score)$out)
+```
+
+### Social Support
+* `NA` values: `r sum(is.na(worldhappiness15_19$social))`
+* `NULL` values: `r sum(is.null(worldhappiness15_19$social))`
+
+The following values are identifed as outliers when using Tukey's method:
+
+```{r}
+ifelse(length(boxplot.stats(worldhappiness15_19$social)$out)==0, "None", boxplot.stats(worldhappiness15_19$social)$out)
+```
+
+### Healthy Life Expectancy
+* `NA` values: `r sum(is.na(worldhappiness15_19$life_exp))`
+* `NULL` values: `r sum(is.null(worldhappiness15_19$life_exp))`
+
+The following values are identifed as outliers when using Tukey's method:
+
+```{r}
+ifelse(length(boxplot.stats(worldhappiness15_19$life_exp)$out)==0, "None", boxplot.stats(worldhappiness15_19$life_exp)$out)
+```
+
+### Freedom to Make Life Choices
+* `NA` values: `r sum(is.na(worldhappiness15_19$freedom))`
+* `NULL` values: `r sum(is.null(worldhappiness15_19$freedom))`
+
+The following values are identifed as outliers when using Tukey's method:
+
+```{r}
+ifelse(length(boxplot.stats(worldhappiness15_19$freedom)$out)==0, "None", boxplot.stats(worldhappiness15_19$freedom)$out)
+```
+
+### Perceptions of Corruption
+* `NA` values: `r sum(is.na(worldhappiness15_19$gov_corr))`
+* `NULL` values: `r sum(is.null(worldhappiness15_19$gov_corr))`
+
+The following values are identifed as outliers when using Tukey's method:
+
+```{r}
+ifelse(length(boxplot.stats(worldhappiness15_19$gov_corr)$out)==0, "None", boxplot.stats(worldhappiness15_19$gov_corr)$out)
+```
+
+## Table for Happiness Score and GDP Per Capita for Afghanistan and Switzerland for 2016
+```{r}
+#Only return observations from Afghanistan or Switzerland
+#Select onlt country, year, happiness score and gdp per capita
+#Order by country and then year
+#rename columns
+dat_tbl = worldhappiness15_19 %>%
+  filter(country=="Afghanistan" | country=="Switzerland") %>%
+  select(country, year, score, gdp_per_cap) %>%
+  arrange(country, year) %>%
+  rename(Country = country,
+         Year = year,
+         `GDP Per Capita` = gdp_per_cap,
+         Score = score)
+
+#Pivot wider to make more visually pleasing, and round values to 3 decimal places
+dat_tbl = dat_tbl %>%
+  pivot_wider(names_from = Year, values_from = c(Score, `GDP Per Capita`)) %>%
+  mutate_if(is.numeric, round, 3)
+
+#Output nice table
+dat_tbl %>%
+  kable(col.names = c("Country", "2015", "2016", "2017", "2018", "2019", "2015", "2016", "2017", "2018", "2019")) %>%
+  kable_styling(bootstrap_options = c("striped"), latex_options = c("scale_down")) %>%
+  add_header_above(c(" "=1, "Score" = 5, "GDP Per Capita" = 5))
+```
+
+## Plot Happiness Score vs Other Variables
+```{r}
+#Set generic plot
+plot = ggplot(data = worldhappiness15_19, aes(x = x, y = score))
+```
+
+### Score vs GDP Per Capita
+
+```{r}
+#Scatterplot, coloring by region, and facetting by year
+plot_gdp = plot +
+  geom_point(aes(x = gdp_per_cap, color = factor(worldhappiness15_19$region))) +
+  facet_wrap(~year) +
+  labs(color = "Region", x = "Effect of GDP", y = "Happiness Score")
+plot_gdp
+```
+
+### Score vs Family
+
+```{r}
+dat = worldhappiness15_19 %>%
+  filter(!is.na(family))
+
+plot = ggplot(data = dat, aes(x = x, y = score))
+
+plot_family = plot +
+  geom_point(aes(x = family, color = factor(region))) +
+  facet_wrap(~year) +
+  labs(color = "Region", x = "Effect of Family", y = "Happiness Score")
+plot_family
+```
+
+### Score vs Life Expectancy
+
+```{r}
+dat = worldhappiness15_19 %>%
+  filter(!is.na(life_exp))
+
+plot = ggplot(data = dat, aes(x = x, y = score))
+
+plot_life = plot +
+  geom_point(aes(x = life_exp, color = factor(region))) +
+  facet_wrap(~year) +
+  labs(color = "Region", x = "Effect of Life Expectancy", y = "Happiness Score")
+plot_life
+```
+
+### Score vs Freedom to Make Choices
+
+```{r}
+dat = worldhappiness15_19 %>%
+  filter(!is.na(freedom))
+
+plot = ggplot(data = dat, aes(x = x, y = score))
+
+plot_freedom = plot +
+  geom_point(aes(x = freedom, color = factor(region))) +
+  facet_wrap(~year) +
+  labs(color = "Region", x = "Effect of Freedom", y = "Happiness Score")
+plot_freedom
+```
+
+### Score vs Perceptions of Government Corruption
+
+```{r}
+dat = worldhappiness15_19 %>%
+  filter(!is.na(gov_corr))
+
+plot = ggplot(data = dat, aes(x = x, y = score))
+
+plot_gov = plot +
+  geom_point(aes(x = gov_corr, color = factor(region))) +
+  facet_wrap(~year) +
+  labs(color = "Region", x = "Effect of Government Corruption", y = "Happiness Score")
+plot_gov
+```
+
+### Score vs Generosity
+
+```{r}
+dat = worldhappiness15_19 %>%
+  filter(!is.na(gener))
+
+plot = ggplot(data = dat, aes(x = x, y = score))
+
+plot_gener = plot +
+  geom_point(aes(x = gener, color = factor(region))) +
+  facet_wrap(~year) +
+  labs(color = "Region", x = "Effect of Generosity", y = "Happiness Score")
+plot_gener
+```
+
+## Yearly Average of Each Variable for Countries Within the Same Region
+
+```{r, warning=F}
+#Create summary per region but only for 2015, of the listed variables
+#Also, melt the data to make it easier to plot bar charts
+avg_2015 = worldhappiness15_19 %>%
+  filter(year==2015) %>%
+  group_by(region) %>%
+  summarise_at(c("score", "gdp_per_cap", "family", "life_exp", "freedom", "gov_corr", "gener",
+                 "res"), mean, na.rm = T) %>%
+  melt(., id = "region")
+
+avg_2016 = worldhappiness15_19 %>%
+  filter(year==2016) %>%
+  group_by(region) %>%
+  summarise_at(c("score", "gdp_per_cap", "family", "life_exp", "freedom", "gov_corr", "gener",
+                 "res"), mean, na.rm = T) %>%
+  melt(., id = "region")
+
+avg_2017 = worldhappiness15_19 %>%
+  filter(year==2017) %>%
+  group_by(region) %>%
+  summarise_at(c("score", "gdp_per_cap", "family", "life_exp", "freedom", "gov_corr", "gener",
+                 "res"), mean, na.rm = T) %>%
+  melt(., id = "region")
+
+avg_2018 = worldhappiness15_19 %>%
+  filter(year==2018) %>%
+  group_by(region) %>%
+  summarise_at(c("score", "gdp_per_cap", "life_exp", "freedom", "gov_corr", "gener",
+                 "res"), mean, na.rm = T) %>%
+  melt(., id = "region")
+
+avg_2019 = worldhappiness15_19 %>%
+  filter(year==2019) %>%
+  group_by(region) %>%
+  summarise_at(c("score", "gdp_per_cap", "life_exp", "freedom", "gov_corr", "gener",
+                 "res"), mean, na.rm = T) %>%
+  melt(., id = "region")
+```
+
+### 2015
+
+```{r}
+#2015
+#Plot the values of the various averages
+plot_avg = ggplot(data = avg_2015, aes(x = variable, y = value))
+plot_avg + geom_bar(stat = "identity", na.rm = T) +
+  facet_wrap(~region) +
+  coord_flip() +
+  labs(x = "Variable", y = "Value")
+```
+
+### 2016
+
+```{r}
+#2016
+plot_avg2 = ggplot(data = avg_2016, aes(x = variable, y = value))
+plot_avg2 + geom_bar(stat = "identity", na.rm = T) +
+  facet_wrap(~region) +
+  coord_flip() +
+  labs(x = "Variable", y = "Value")
+```
+
+### 2017
+
+```{r}
+#2017
+plot_avg3 = ggplot(data = avg_2017, aes(x = variable, y = value))
+plot_avg3 + geom_bar(stat = "identity", na.rm = T) +
+  facet_wrap(~region) +
+  coord_flip() +
+  labs(x = "Variable", y = "Value")
+```
+
+### 2018
+
+```{r}
+#2018
+plot_avg4 = ggplot(data = avg_2018, aes(x = variable, y = value))
+plot_avg4 + geom_bar(stat = "identity", na.rm = T) +
+  facet_wrap(~region) +
+  coord_flip() +
+  labs(x = "Variable", y = "Value")
+```
+
+### 2019
+
+```{r}
+#2019
+plot_avg5 = ggplot(data = avg_2019, aes(x = variable, y = value))
+plot_avg5 + geom_bar(stat = "identity", na.rm = T) +
+  facet_wrap(~region) +
+  coord_flip() +
+  labs(x = "Variable", y = "Value")
+```
+
+\newpage
+
+# Appendix
+## Code
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

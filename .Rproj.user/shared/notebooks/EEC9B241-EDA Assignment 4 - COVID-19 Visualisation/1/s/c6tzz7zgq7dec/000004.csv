@@ -1,6 +1,0 @@
-"0","world_dat <- as.data.frame(ne_countries(scale = ""medium"")) %>%
-  select(c(""sovereignt"", ""pop_est"", ""geometry""))
-"
-"2","Error: Can't subset columns that don't exist.
-[31mx[39m The column `geometry` doesn't exist.
-"

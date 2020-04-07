@@ -19,6 +19,7 @@ library(tmap)
 library(plotly)
 library(sf)
 library(spData)
+library(countrycode)
 ```
 
 ```{r get-data}
@@ -30,75 +31,90 @@ ncov <- ncov %>% mutate(Date = ymd(Date))
 
 #Get geometry data for the world and all its countries
 
-#Most comprehensive data of countries seems to come from ne_countries, but this doesn't separate the West Bank and Gaza, and Israel, but the ncov data does. So I use spData's world function to get geometry data for the West Bank and Gaza, and then add it in later
-
-world_dat = world %>%
+world_geom = world %>%
   select(c("name_long", "continent", "region_un", "subregion", "pop", "geom"))
 
-palest = world_dat %>%
-  filter(name_long == "Palestine")
-
-colnames(palest) = c("sovereignt", "continent", "region_un", "subregion", "pop_est", "geometry")
-
-world_dat = ne_countries(scale = "medium", returnclass = "sf")
-world
-
+world_ne0 = ne_countries(scale = "medium", returnclass = "sf", type = "countries")
+world_ne = world_ne0 %>%
+  select(c(sovereignt, geometry))
 ```
 
 ```{r check-data, include = F}
 #The COVID-19 data is assumed to be clean since the repo used claims to be the cleaned version of data from John's Hopkins. So no structural checks, NA checks etc. are done at this stage.
 ```
 
-```{r conform-data}
-#Add COVID-19 data to geometry data
-#Some countries are named differently so we change those now
-#Change country names in world data
-world$sovereignt = world$sovereignt %>%
-  recode("United States of America" = "US",
-         "United Republic of Tanzania" = "Tanzania",
-         "East Timor" = "Timor-Leste",
-         "Swaziland" = "Eswatini",
-         "The Bahamas" = "Bahamas",
-         )
+```{r add-geom-data}
+#Need to add geometry data to ncov data
+#First create column in ncov for World Bank country code. Will then use this code to join geometry data
+ncov$iso3c = countrycode(sourcevar = ncov$Country, origin = "country.name", destination = "wb")
 
-#Change country names in ncov data
+#Missing code for Holy See, Diamond Princess and MS Zaandam
+#Need to replace Holy See with Vatican
 ncov$Country = ncov$Country %>%
-  recode("Holy See" = "Vatican",
-         "Cabo Verde" = "Cape Verde",
-         "Guinea-Bissau" = "Guinea Bissau",
-         "Burma" = "Myanmar",
-         "Congo (Kinshasa)" = "Democratic Republic of the Congo",
-         "Congo (Brazzaville" = "Republic of Congo")
+  recode("Holy See" = "Vatican")
 
+#Add code for missing countries
+ncov = ncov %>%
+  mutate(iso3c = ifelse(Country=="Vatican", "VAT", iso3c)) %>%
+  mutate(iso3c = ifelse(Country=="Western Sahara", "ESH", iso3c)) %>%
+  mutate(iso3c = ifelse(Country=="Diamond Princess", "CDP", iso3c)) %>%
+  mutate(iso3c = ifelse(Country=="MS Zaandam", "CMZ", iso3c))
 
-#Unfortunately I couldn't find 
+#Create column in world_geom for iso3c
+world_geom$iso3c = countrycode(sourcevar = world_geom$name_long, 
+                               origin = "country.name", destination = "wb")
 
+world_ne$iso3c = countrycode(sourcevar = world_ne$sovereignt, 
+                               origin = "country.name", destination = "wb")
+
+#Few countries without countrycodes so need to insert manually
+world_ne = world_ne %>%
+  mutate(iso3c = ifelse(sovereignt == "Western Sahara", "ESH", iso3c)) %>%
+  mutate(iso3c = ifelse(sovereignt == "Vatican", "VAT", iso3c))
+
+#West Bank and Gaza still need geometry data. Use world_geom from world to extract geometry data and then add to world_ne
+palest = world_geom %>%
+  filter(name_long == "Palestine") %>%
+  select(c(name_long, geom)) %>%
+  mutate(iso3c = "PSE")
+
+colnames(palest) = c("sovereignt", "geometry", "iso3c")
+
+#Convert both to data frame and then rbind and convert back to sf
+palest_df = as.data.frame(palest)
+world_ne_df = as.data.frame(world_ne)
+world_ne_df2 = rbind(world_ne_df, palest_df)
+world_ne_full = st_as_sf(world_ne_df2)
+
+#Join ncov and geometry data
+dat = left_join(ncov, world_ne_full, by = c("iso3c"))
+dat = dat %>%
+  select(-sovereignt)
 ```
 
-```{r get-most-recent}
-#To get only most recent data, either today's data or yesterday's if today's isn't up yet
+
+```{r get-latest-data}
+#Get latest ncov data. This can be used to plot the map since we only need one plot, whereas the dat dataset contains a repeated geometry for each observation
 if (max(ncov$Date) != today()) {
   date_newest = today()-1
 }else{date = today()}
-ncov_newest = ncov %>%
+ncov_newest = dat %>%
   filter(Date == date_newest)
+
+#See which country has no geometry data
+#test = dat[st_is_empty(ncov_newest$geom),]
 ```
 
-```{r join-data}
-#Have to use right join so R keeps the sf class
-dat = right_join(world_dat, ncov_newest, by = c("name_long" = "Country"))
-```
+```{r test-plot}
+# world_points<- st_centroid(world)
+# world_points <- cbind(world, st_coordinates(st_centroid(dat$geometry)))
 
-```{r}
-world_points<- st_centroid(world)
-world_points <- cbind(world, st_coordinates(st_centroid(world$geometry)))
-
-
-plot = ggplot(data = world) +
-  geom_sf() +
-  geom_text(data= world_points, aes(x=X, y=Y, label=name),
-    color = "darkblue", fontface = "bold", check_overlap = FALSE)
-
+#Have to remove Countries with no geometry data before turning into plotly plot
+test = ncov_newest %>%
+  filter(!(Country == "Diamond Princess")) %>%
+  filter(!(Country == "MS Zaandam"))
+plot = ggplot(data = test) +
+  geom_sf(aes(geometry = test$geometry))
 plot
 
 ggplotly(plot)
