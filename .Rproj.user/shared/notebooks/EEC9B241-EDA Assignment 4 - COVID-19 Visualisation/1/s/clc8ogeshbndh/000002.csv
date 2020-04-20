@@ -1,0 +1,5 @@
+"0","wolrd_ne_no_palest = world_ne %>%
+  filter(1)
+"
+"2","Error: Argument 2 filter condition does not evaluate to a logical vector
+"

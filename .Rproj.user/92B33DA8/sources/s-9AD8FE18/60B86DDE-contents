@@ -1,0 +1,21 @@
+install.packages("spData")
+remotes::install_github("Nowosad/spDataLarge")
+library(spData)
+library(spDataLarge)
+library(ggplot2)
+
+world
+View(world)
+
+library(maps)
+library(ggplot2)
+world_data <- ggplot2::map_data('world')
+world_data <- fortify(world_data)
+head(world_data)
+
+
+library(rnaturalearth)
+test = ne_countries(scale = "medium", type = "countries")
+test = ne_countries(scale = "medium", returnclass = "sf")
+
+test2 = test$geometry

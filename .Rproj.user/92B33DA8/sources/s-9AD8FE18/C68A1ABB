@@ -1,0 +1,34 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587387372689.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C68A1ABB",
+    "lastKnownWriteTime" : 28429440806420583,
+    "last_content_update" : 1587387372689,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "5F28C87B",
+        "caption" : "world_ne_no_palest",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=world_ne_no_palest&cache_key=5F28C87B",
+        "displayedObservations" : 1,
+        "environment" : "",
+        "expression" : "world_ne_no_palest",
+        "object" : "world_ne_no_palest",
+        "preview" : 0,
+        "source_window_id" : "ws786yy9h1x06",
+        "totalObservations" : 1,
+        "variables" : 2
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

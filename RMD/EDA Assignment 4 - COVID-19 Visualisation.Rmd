@@ -14,13 +14,13 @@ library(lubridate)
 library(ggplot2)
 library(rnaturalearth)
 library(rnaturalearthdata)
-library(ggmap)
+#library(ggmap)
 #library(tmap)
 library(plotly)
 library(sf)
-library(spData)
+#library(spData)
 library(countrycode)
-library(googleVis)
+#library(googleVis)
 #library(leaflet)
 options(scipen=10000) #Remove scientific notation from ggplot legend
 ```
@@ -43,8 +43,37 @@ world_ne = world_ne0 %>%
   select(c(sovereignt, geometry))
 ```
 
-```{r check-data, include = F}
-#The COVID-19 data is assumed to be clean since the repo used claims to be the cleaned version of data from John's Hopkins. So no structural checks, NA checks etc. are done at this stage.
+```{r extract-israel}
+israel_geom = world_geom %>%
+  filter(name_long == "Israel")
+palest_geom = world_geom %>%
+  filter(name_long == "Palestine")
+
+world_geom_no_palest = world_geom %>%
+  filter(!(name_long=="Palestine"))
+
+world_ne_no_palest = world_ne[-180, ]
+```
+
+```{r test-israel-plot}
+test_plot = ggplot(data = world_geom) +
+  geom_sf(aes(geometry = geom,
+              fill = pop))
+
+ggplotly(test_plot)
+
+test_plot2 = ggplot(data = world_ne) +
+  geom_sf(aes(geometry = geometry), fill = "red")
+
+ggplotly(test_plot2)
+```
+
+
+
+```{r conc}
+#world_geom has Israel with a hole in it for Palestine
+
+#world_ne is more accurate with borders but has 2 instances of Israel. Row 179 is Gaza Strip, Row 105 is Israel
 ```
 
 ```{r add-geom-data}

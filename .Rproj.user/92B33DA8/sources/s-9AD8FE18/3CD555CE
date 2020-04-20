@@ -1,0 +1,34 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587386463430.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "3CD555CE",
+    "lastKnownWriteTime" : 8246223293474941986,
+    "last_content_update" : 1587386463430,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "A2BBE68B",
+        "caption" : "israel_geom",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=israel_geom&cache_key=A2BBE68B",
+        "displayedObservations" : 1,
+        "environment" : "",
+        "expression" : "israel_geom",
+        "object" : "israel_geom",
+        "preview" : 0,
+        "source_window_id" : "ws786yy9h1x06",
+        "totalObservations" : 1,
+        "variables" : 6
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
