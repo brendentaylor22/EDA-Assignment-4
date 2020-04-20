@@ -19,4 +19,3 @@
 "0","  mutate(pop = ifelse(Country == ""South Sudan"", 12580000, pop)) %>%"
 "0","  mutate(pop = ifelse(Country == ""Kosovo"", 1831000, pop)) %>% #Add missing populations"
 "0","  mutate(cases_per_mil = Confirmed*1000000/pop) #Calc cases per million"
-"0",""

@@ -1,0 +1,2 @@
+"0","#Add index to dat based on the date of the observation"
+"0","dat$index = as.numeric(as.factor(dat$Date))"
