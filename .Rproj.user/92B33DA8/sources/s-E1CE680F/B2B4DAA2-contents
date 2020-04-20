@@ -1,14 +1,3 @@
----
-title: "EDA Assignment 4 - COVID-19 Visualisation"
-author: "Brenden Taylor"
-date: "31/03/2020"
-output: 
-  bookdown::html_document2:
-    number_sections: no
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, comment = NA, warning = FALSE)
 library(tidyverse)
 library(lubridate)
 library(ggplot2)
@@ -22,10 +11,7 @@ library(spData)
 library(countrycode)
 library(googleVis)
 #library(leaflet)
-options(scipen=10000) #Remove scientific notation from ggplot legend
-```
 
-```{r get-data}
 #Get latest COVID-19 data
 #I don't run this in a separate file because I want the latest data every time the file is knit
 ncov <- read.csv("https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv")
@@ -35,7 +21,7 @@ ncov <- ncov %>%
 
 #Get geometry data for the world and all its countries
 
-#world_geom = world %>%
+world_geom = world %>%
   select(c("name_long", "continent", "region_un", "subregion", "pop", "geom"))
 
 world_ne0 = ne_countries(scale = "medium", returnclass = "sf", type = "countries")
@@ -66,38 +52,33 @@ ncov = ncov %>%
   mutate(iso3c = ifelse(Country=="MS Zaandam", "CMZ", iso3c))
 
 #Create column in world_geom for iso3c
-# world_geom$iso3c = countrycode(sourcevar = world_geom$name_long, 
-#                                origin = "country.name", destination = "wb")
+world_geom$iso3c = countrycode(sourcevar = world_geom$name_long, 
+                               origin = "country.name", destination = "wb")
 
 world_ne$iso3c = countrycode(sourcevar = world_ne$sovereignt, 
-                               origin = "country.name", destination = "wb")
+                             origin = "country.name", destination = "wb")
 
 #Few countries without countrycodes so need to insert manually
 world_ne = world_ne %>%
   mutate(iso3c = ifelse(sovereignt == "Western Sahara", "ESH", iso3c)) %>%
   mutate(iso3c = ifelse(sovereignt == "Vatican", "VAT", iso3c))
 
-#world_ne contains 2 Israel entries. Row 179 is West Bank and Gaza so will be renamed
-world_ne[180,1] = "West Bank and Gaza"
-world_ne = world_ne %>%
-  mutate(iso3c = ifelse(sovereignt == "West Bank and Gaza", "PSE", iso3c))
-
 #West Bank and Gaza still need geometry data. Use world_geom from world to extract geometry data and then add to world_ne
-# palest = world_geom %>%
-#   filter(name_long == "Palestine") %>%
-#   select(c(name_long, geom)) %>%
-#   mutate(iso3c = "PSE")
-# 
-# colnames(palest) = c("sovereignt", "geometry", "iso3c")
-# 
-# #Convert both to data frame and then rbind and convert back to sf
-# palest_df = as.data.frame(palest)
-# world_ne_df = as.data.frame(world_ne)
-# world_ne_df2 = rbind(world_ne_df, palest_df)
-# world_ne_full = st_as_sf(world_ne_df2)
+palest = world_geom %>%
+  filter(name_long == "Palestine") %>%
+  select(c(name_long, geom)) %>%
+  mutate(iso3c = "PSE")
+
+colnames(palest) = c("sovereignt", "geometry", "iso3c")
+
+#Convert both to data frame and then rbind and convert back to sf
+palest_df = as.data.frame(palest)
+world_ne_df = as.data.frame(world_ne)
+world_ne_df2 = rbind(world_ne_df, palest_df)
+world_ne_full = st_as_sf(world_ne_df2)
 
 #Join ncov and geometry data
-dat = left_join(ncov, world_ne, by = c("iso3c"))
+dat = left_join(ncov, world_ne_full, by = c("iso3c"))
 dat = dat %>%
   select(-sovereignt)
 
@@ -139,7 +120,7 @@ pop_dat = googleVis::Population %>%
 
 #Add country codes as per above
 pop_dat$iso3c = countrycode(sourcevar = pop_dat$country2, 
-                               origin = "country.name", destination = "wb")
+                            origin = "country.name", destination = "wb")
 #Add Western Sahara and Vatican
 pop_dat = pop_dat %>%
   mutate(iso3c = ifelse(country2 == "Western Sahara", "ESH", iso3c)) %>%
@@ -161,9 +142,9 @@ dat = left_join(dat, pop_dat, by = c("iso3c")) %>%
 
 ncov_newest = get_latest()
 plot = ggplot(data = ncov_newest) +
-  geom_sf(aes(geometry = geometry, fill = cases_per_mil)) +
+  geom_sf(aes(geometry = geometry)) +
   scale_fill_gradient(low = "blue", high = "red")
-plot
+#plot
 
 ggplotly(plot)
 ```

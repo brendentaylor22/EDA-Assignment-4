@@ -1,0 +1,3 @@
+"0","#Need to add geometry data to ncov data"
+"0","#First create column in ncov for World Bank country code. Will then use this code to join geometry data"
+"0","ncov$iso3c = countrycode(sourcevar = ncov$Country, origin = ""country.name"", destination = ""wb"")"
