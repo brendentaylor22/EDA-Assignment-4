@@ -1,0 +1,34 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587827273337.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "729AE7D",
+    "lastKnownWriteTime" : 1800532353760,
+    "last_content_update" : 1587827273337,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "ABAD8914",
+        "caption" : "world_ne",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=world_ne&cache_key=ABAD8914",
+        "displayedObservations" : 241,
+        "environment" : "",
+        "expression" : "world_ne",
+        "object" : "world_ne",
+        "preview" : 0,
+        "source_window_id" : "w2gv5463bhkdn",
+        "totalObservations" : 241,
+        "variables" : 3
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
