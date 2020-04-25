@@ -1,0 +1,14 @@
+"0","plot3 = ggplot() +
+  geom_sf(data = ncov_newest, aes(geometry = geometry)) +
+  geom_point(data = test,
+             aes(x = X, y = Y),
+             shape = 21,
+             colour = ""turquoise"",
+             alpha = 0.2,
+             fill = ""blue"") +
+  geom_text(data = ncov_newest,
+            aes(x = X, y = Y,
+                label = rownames(ncov_newest)))
+"
+"2","Error in fortify(data) : object 'test' not found
+"

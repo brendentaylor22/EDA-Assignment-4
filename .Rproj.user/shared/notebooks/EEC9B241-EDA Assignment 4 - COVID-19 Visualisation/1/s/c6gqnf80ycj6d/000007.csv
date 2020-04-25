@@ -1,7 +1,0 @@
-"0","ncov_newest = get_latest(df = dat)"
-"0","plot = ggplot(data = ncov_newest) +"
-"0","  geom_sf(aes(geometry = geometry, fill = cases_per_mil)) +"
-"0","  scale_fill_gradient(low = ""blue"", high = ""red"")"
-"0","#plot"
-"0",""
-"0","ggplotly(plot)"

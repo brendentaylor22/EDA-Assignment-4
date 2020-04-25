@@ -48,6 +48,25 @@ world_ne = world_ne0 %>%
 #The COVID-19 data is assumed to be clean since the repo used claims to be the cleaned version of data from John's Hopkins. So no structural checks, NA checks etc. are done at this stage.
 ```
 
+```{r remove-dups}
+#Some countries have multiple entries e.g. for certain colonies of the UK
+#These greatly distort the graphics since these tiny islands have thousands of cases
+#These will be removed and only the "mainland" kept
+
+rows_to_remove = c(13,92,100,158, #Australia
+                   91, 133, #China
+                   55, #Cyprus
+                   74,87, #Denmark
+                   6, #Finland
+                   14,28,134,156,181,200,236, #France
+                   1, 53, 208, #Netherlands
+                   47,161, #NZ
+                   11,89,148,176,233, #US
+                   4,31,54,72,79,98,101,109,151,170,192,193,211,232) #UK
+
+world_ne = world_ne[-rows_to_remove,]
+```
+
 ```{r add-geom-data}
 #Need to add geometry data to ncov data
 #First create column in ncov for World Bank country code. Will then use this code to join geometry data
@@ -171,6 +190,11 @@ centers = st_centroid(dat$geometry)
 # dat$centers = st_coordinates(centers)
 dat = cbind(dat, st_coordinates(centers))
 
+#Alaska throws off the center of USA so will set that manually
+dat = dat %>%
+  mutate(X = ifelse(Country == "US", -100.522057, X)) %>%
+  mutate(Y = ifelse(Country == "US", 39.975361, Y))
+
 ncov_newest = get_latest(df = dat)
 plot2 = ggplot(data = ncov_newest) +
   geom_sf(aes(geometry = geometry)) +
@@ -178,7 +202,7 @@ plot2 = ggplot(data = ncov_newest) +
                  size = Confirmed),
              shape = 21,
              colour = "turquoise",
-             alpha = 0.4,
+             alpha = 0.5,
              fill = "blue") +
   scale_size_continuous(name = "Test",
                         range = c(0,10))
@@ -186,6 +210,74 @@ plot2
 
 ggplotly(plot2)
 ```
+
+```{r test-remove}
+test = ncov_newest %>%
+  filter(Country=="Australia")
+
+
+# plot3 = ggplot(data = ncov_newest) +
+#   geom_sf(aes(geometry = geometry)) +
+#   geom_point(aes(x = 123.58384, y = -12.42993),
+#              shape = 21,
+#              colour = "turquoise",
+#              alpha = 0,
+#              fill = "blue") +
+#   geom_text(aes(x = 123.58384, y = -12.42993,
+#                 label = "4"))
+
+plot3 = ggplot() +
+  geom_sf(data = ncov_newest, aes(geometry = geometry)) +
+  geom_point(data = test,
+             aes(x = X, y = Y),
+             shape = 21,
+             colour = "turquoise",
+             alpha = 0.2,
+             fill = "blue") +
+  geom_text(data = ncov_newest,
+            aes(x = X, y = Y,
+                label = rownames(ncov_newest)))
+plot3
+
+ggplotly(plot3)
+```
+
+
+```{r test-remove2}
+countries_with_dups = c("Australia", "China", "Cyprus", "Denmark", "Finland", "France", "Netherlands", "New Zealand", "United Kingdom", "US")
+ncov_newest = ncov_newest %>%
+  mutate(test2 = ifelse(Country %in% countries_with_dups, 1, 0))
+
+new_plot = function(df) {
+  plot4 = ggplot() +
+    geom_sf(data = df, aes(geometry = geometry, fill = test2)) +
+    scale_color_manual(values = c('1' = 'red', '0' = NA))
+  #plot4
+  
+  ggplotly(plot4)
+}
+
+test_dat = ncov_newest
+new_plot(test_dat)
+
+#Remove duplicates
+
+#Remove rows and try
+test_dat = ncov_newest
+#test_dat = test_dat[-c(9,11,12,13),] #Aus
+#test_dat = test_dat[-c(42, 43),] #China
+#test_dat = test_dat[-c(52),] #Cyprus
+#test_dat = test_dat[-c(55, 56),] #Denmark
+#test_dat = test_dat[-c(69),] #Finland
+#test_dat = test_dat[-c(71,72,74,75,76,77,78),] #France
+#test_dat = test_dat[-c(136,137,139),] #Netherlands
+#test_dat = test_dat[-c(140,141),] #NZ
+#test_dat = test_dat[-c(192,193,194,195,197),] #US
+#test_dat = test_dat[-c(201,202,203,204,206,207,208,209,210,211,212,213,214,215),] #UK
+new_plot(test_dat)
+```
+
+
 
 ```{r animation-cases-per-mil-map}
 cases_min = min(dat$cases_per_mil)
