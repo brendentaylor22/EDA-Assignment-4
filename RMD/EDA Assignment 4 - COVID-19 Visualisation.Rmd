@@ -117,11 +117,7 @@ dat = dat %>%
 ```{r get-latest-data}
 #Get latest ncov data. This can be used to plot the map since we only need one plot, whereas the dat dataset contains a repeated geometry for each observation
 get_latest = function(df) {
-  if (max(ncov$Date) != today()) {
-    date_newest = today() - 1
-  } else{
-    date = today()
-  }
+  date_newest = max(ncov$Date)
   ncov_newest = df %>%
     filter(Date == date_newest)
   return(ncov_newest)
