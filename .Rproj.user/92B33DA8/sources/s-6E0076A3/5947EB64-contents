@@ -151,24 +151,43 @@ dat = left_join(dat, pop_dat, by = c("iso3c")) %>%
   mutate(cases_per_mil = Confirmed*1000000/pop) #Calc cases per million
 ```
 
-```{r add-index}
-#Add index to dat based on the date of the observation
-dat$index = as.numeric(as.factor(dat$Date))
-```
-
-
 ```{r test-plot}
 ncov_newest = get_latest(df = dat)
 plot = ggplot(data = ncov_newest) +
   geom_sf(aes(geometry = geometry, fill = cases_per_mil)) +
   scale_fill_gradient(low = "blue", high = "red")
-plot
+#plot
 
 ggplotly(plot)
 ```
 
+```{r add-index}
+#Add index to dat based on the date of the observation
+dat$index = as.numeric(as.factor(dat$Date))
+```
 
-```{r animation}
+```{r add-centroids}
+centers = st_centroid(dat$geometry)
+# dat$centers = st_coordinates(centers)
+dat = cbind(dat, st_coordinates(centers))
+
+ncov_newest = get_latest(df = dat)
+plot2 = ggplot(data = ncov_newest) +
+  geom_sf(aes(geometry = geometry)) +
+  geom_point(aes(x = X, y = Y,
+                 size = Confirmed),
+             shape = 21,
+             colour = "turquoise",
+             alpha = 0.4,
+             fill = "blue") +
+  scale_size_continuous(name = "Test",
+                        range = c(0,10))
+plot2
+
+ggplotly(plot2)
+```
+
+```{r animation-cases-per-mil-map}
 cases_min = min(dat$cases_per_mil)
 cases_max = max(dat$cases_per_mil)
 
