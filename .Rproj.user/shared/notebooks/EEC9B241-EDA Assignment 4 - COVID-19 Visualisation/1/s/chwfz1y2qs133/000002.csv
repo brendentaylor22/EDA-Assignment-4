@@ -1,0 +1,7 @@
+"0","#Used sometimes for debugging plots"
+"0","get_first = function(df) {"
+"0","  date_first = min(ncov$Date)"
+"0","  ncov_first = df %>%"
+"0","    filter(Date == date_first)"
+"0","  return(ncov_first)"
+"0","}"

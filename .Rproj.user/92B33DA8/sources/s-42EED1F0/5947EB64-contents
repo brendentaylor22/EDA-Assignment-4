@@ -1,0 +1,369 @@
+---
+title: "EDA Assignment 4 - COVID-19 Visualisation"
+author: "Brenden Taylor"
+date: "31/03/2020"
+output: 
+  bookdown::html_document2:
+    number_sections: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = NA, warning = FALSE)
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(gganimate)
+library(rnaturalearth)
+library(rnaturalearthdata)
+#library(ggmap)
+#library(tmap)
+library(plotly)
+library(sf)
+library(spData)
+library(countrycode)
+library(googleVis)
+#library(leaflet)
+options(scipen=10000) #Remove scientific notation from ggplot legend
+```
+
+```{r get-data}
+#Get latest COVID-19 data
+#I don't run this in a separate file because I want the latest data every time the file is knit
+ncov <- read.csv("https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv")
+# convert Date from factor to date class
+ncov <- ncov %>% 
+  mutate(Date = ymd(Date))
+
+#Get geometry data for the world and all its countries
+world_ne0 = ne_countries(scale = "medium", returnclass = "sf", type = "countries")
+world_ne = world_ne0 %>%
+  select(c(sovereignt, geometry))
+```
+
+```{r check-data, include = F}
+#The COVID-19 data is assumed to be clean since the repo used claims to be the cleaned version of data from John's Hopkins. So no structural checks, NA checks etc. are done at this stage.
+```
+
+```{r remove-dups}
+#Some countries have multiple entries in their geometry data e.g. for certain colonies of the UK
+#The ncov data obviously doesn't account for this so the graphics are greatly distorted since these tiny islands have 'thousands' of cases
+#These will be removed and only the "mainland" kept
+
+rows_to_remove = c(13,92,100,158, #Australia
+                   91, 133, #China
+                   55, #Cyprus
+                   74,87, #Denmark
+                   6, #Finland
+                   14,28,134,156,181,200,236, #France
+                   1, 53, 208, #Netherlands
+                   47,161, #NZ
+                   11,89,148,176,233, #US
+                   4,31,54,72,79,98,101,109,151,170,192,193,211,232) #UK
+
+world_ne = world_ne[-rows_to_remove,]
+```
+
+```{r add-geom-data}
+#Need to add geometry data to ncov data
+#First create column in ncov for World Bank country code. Will then use this code to join geometry data
+ncov$iso3c = countrycode(sourcevar = ncov$Country, origin = "country.name", destination = "wb")
+
+#Missing code for Holy See, Diamond Princess and MS Zaandam
+#Need to replace Holy See with Vatican and remove '*' from Taiwan
+ncov$Country = ncov$Country %>%
+  recode("Holy See" = "Vatican") %>%
+  recode("Taiwan*" = "Taiwan")
+
+#Add code for missing countries in ncov
+ncov = ncov %>%
+  mutate(iso3c = ifelse(Country=="Vatican", "VAT", iso3c)) %>%
+  mutate(iso3c = ifelse(Country=="Western Sahara", "ESH", iso3c)) %>%
+  mutate(iso3c = ifelse(Country=="Diamond Princess", "CDP", iso3c)) %>%
+  mutate(iso3c = ifelse(Country=="MS Zaandam", "CMZ", iso3c))
+
+world_ne$iso3c = countrycode(sourcevar = world_ne$sovereignt, 
+                               origin = "country.name", destination = "wb")
+
+#A few countries without countrycodes so need to insert manually in world geom data
+world_ne = world_ne %>%
+  mutate(iso3c = ifelse(sovereignt == "Western Sahara", "ESH", iso3c)) %>%
+  mutate(iso3c = ifelse(sovereignt == "Vatican", "VAT", iso3c))
+
+#world_ne contains 2 Israel entries. Row 179 is West Bank and Gaza so will be renamed
+world_ne[180,1] = "West Bank and Gaza"
+world_ne = world_ne %>%
+  mutate(iso3c = ifelse(sovereignt == "West Bank and Gaza", "PSE", iso3c))
+
+#Join ncov and geometry data
+dat = left_join(ncov, world_ne, by = c("iso3c"))
+dat = dat %>%
+  select(-sovereignt)
+```
+
+```{r remove-cruises}
+#As of 8 April 2020, both Diamond Princess and MS Zaandam had been evacuated and passengers sent to their respective countries. These two cruise ships will be ignored when plotting on a map but will be kept for total cases/deaths/recovered etc.
+
+dat_cruise = dat %>%
+  filter(Country == "Diamond Princess") %>%
+  filter(Country == "MS Zaandam")
+
+dat = dat %>%
+  filter(!(Country == "Diamond Princess")) %>%
+  filter(!(Country == "MS Zaandam"))
+```
+
+
+```{r get-latest-data}
+#Get latest ncov data. This can be used to plot the map since we only need one plot, whereas the 'dat' dataset contains a repeated geometry for each observation
+get_latest = function(df) {
+  date_newest = max(ncov$Date)
+  ncov_newest = df %>%
+    filter(Date == date_newest)
+  return(ncov_newest)
+}
+
+#See which country has no geometry data
+#test = dat[st_is_empty(ncov_newest$geom),]
+```
+
+```{r get-first-data}
+#Used sometimes for debugging plots
+get_first = function(df) {
+  date_first = min(ncov$Date)
+  ncov_first = df %>%
+    filter(Date == date_first)
+  return(ncov_first)
+}
+```
+
+```{r get-pop-data}
+#Population data can be used to work out cases per million people in a country
+#Get population data
+pop_dat = googleVis::Population %>%
+  select(c("Country", "Population")) %>%
+  rename(country2 = Country) %>%
+  rename(pop = Population)
+
+#Add country codes as per above
+pop_dat$iso3c = countrycode(sourcevar = pop_dat$country2, 
+                               origin = "country.name", destination = "wb")
+#Add Western Sahara and Vatican
+pop_dat = pop_dat %>%
+  mutate(iso3c = ifelse(country2 == "Western Sahara", "ESH", iso3c)) %>%
+  mutate(iso3c = ifelse(country2 == "Vatican City", "VAT", iso3c))
+
+#Add population data to dat
+dat = left_join(dat, pop_dat, by = c("iso3c")) %>%
+  select(-c("country2")) %>%
+  mutate(pop = ifelse(Country == "Taiwan", 23780000, pop)) %>%
+  mutate(pop = ifelse(Country == "South Sudan", 12580000, pop)) %>%
+  mutate(pop = ifelse(Country == "Kosovo", 1831000, pop)) %>% #Add missing populations
+  mutate(cases_per_mil = Confirmed*1000000/pop) #Calc cases per million
+```
+
+```{r plot-country-fill-cases-per-mil}
+# ncov_newest = get_latest(df = dat)
+# plot = ggplot(data = ncov_newest) +
+#   geom_sf(aes(geometry = geometry, fill = cases_per_mil)) +
+#   scale_fill_gradient(low = "blue", high = "red")
+# #plot
+# 
+# ggplotly(plot)
+```
+
+```{r add-index}
+#Add index to dat based on the date of the observation
+#Used for animations
+dat$index = as.numeric(as.factor(dat$Date))
+```
+
+```{r add-centroids}
+#Centroids are used when plotting geom_point instead of filling the countries based on a colour scale
+centers = st_centroid(dat$geometry)
+# dat$centers = st_coordinates(centers)
+dat = cbind(dat, st_coordinates(centers))
+
+#Alaska throws off the center of USA so will set that manually
+dat = dat %>%
+  mutate(X = ifelse(Country == "US", -100.522057, X)) %>%
+  mutate(Y = ifelse(Country == "US", 39.975361, Y))
+```
+
+```{r plot-country-geom-point-in-center}
+ncov_newest = get_latest(df = dat)
+plot2 = ggplot(data = ncov_newest) +
+  geom_sf(aes(geometry = geometry)) +
+  geom_point(aes(x = X, y = Y,
+                 size = ifelse(Confirmed==0, NA, Confirmed)),
+             shape = 21,
+             colour = "turquoise",
+             alpha = 0.5,
+             fill = "blue") +
+  scale_radius(range = c(0, 10))
+plot2
+
+ggplotly(plot2)
+```
+
+```{r test-remove2}
+#Chunk was used to identify which countries had 'colonies' that were not accounted for in the ncov data
+
+# countries_with_dups = c("Australia", "China", "Cyprus", "Denmark", "Finland", "France", "Netherlands", "New Zealand", "United Kingdom", "US")
+# ncov_newest = ncov_newest %>%
+#   mutate(test2 = ifelse(Country %in% countries_with_dups, 1, 0))
+# 
+# new_plot = function(df) {
+#   plot4 = ggplot() +
+#     geom_sf(data = df, aes(geometry = geometry, fill = test2)) +
+#     scale_color_manual(values = c('1' = 'red', '0' = NA))
+#   #plot4
+#   
+#   ggplotly(plot4)
+# }
+# 
+# test_dat = ncov_newest
+# new_plot(test_dat)
+# 
+# #Remove duplicates
+# 
+# #Remove rows and try
+# test_dat = ncov_newest
+# #test_dat = test_dat[-c(9,11,12,13),] #Aus
+# #test_dat = test_dat[-c(42, 43),] #China
+# #test_dat = test_dat[-c(52),] #Cyprus
+# #test_dat = test_dat[-c(55, 56),] #Denmark
+# #test_dat = test_dat[-c(69),] #Finland
+# #test_dat = test_dat[-c(71,72,74,75,76,77,78),] #France
+# #test_dat = test_dat[-c(136,137,139),] #Netherlands
+# #test_dat = test_dat[-c(140,141),] #NZ
+# #test_dat = test_dat[-c(192,193,194,195,197),] #US
+# #test_dat = test_dat[-c(201,202,203,204,206,207,208,209,210,211,212,213,214,215),] #UK
+# new_plot(test_dat)
+```
+
+```{r remove-geom-data}
+#Remove geom data from 'dat' dataset to speed up animation rendering
+dat_min = dat %>%
+  select(-c(geometry))
+```
+
+```{r animation-cases-per-mil-map-test}
+cases_min = min(dat$cases_per_mil)
+cases_max = max(dat$cases_per_mil)
+
+#Static plot to help with layout etc.
+plot_test = ggplot(data = ncov_newest) +
+  geom_sf(aes(geometry = geometry,
+              fill = cases_per_mil)) +
+  scale_fill_gradient(
+    name = "Cases Per Million",
+    low = "blue",
+    high = "red",
+    na.value = "gray",
+    limits = c(cases_min, cases_max)
+  ) +
+  #scale_fill_viridis_b(name = "Cases Per Million", begin = 0, end = 1, limits = c(cases_min, cases_max), na.value = "gray") +
+  theme_void() +
+  guides(fill = guide_colorbar(title.position = "top")) +
+  labs(title = "Cases Per Million") +
+  theme(plot.title = element_text(
+    hjust = 0.5,
+    vjust = 0.05,
+    size = 25
+  )) +
+  theme(plot.caption = element_text(
+    hjust = 0,
+    color = "gray40",
+    size = 15
+  )) +
+  theme(
+    legend.position = c(.5, .08),
+    legend.direction = "horizontal",
+    legend.title.align = 0,
+    legend.key.size = unit(1.3, "cm"),
+    legend.title = element_text(size = 17),
+    legend.text = element_text(size = 13)
+  )
+plot_test
+ggplotly(plot_test)
+```
+
+```{r animation-cases-per-mil-map}
+plot_anim = ggplot(data = dat) +
+  geom_sf(aes(geometry = geometry, 
+              fill = cases_per_mil)) +
+  scale_fill_gradient(name = "Cases Per Million", low = "blue", high = "red", na.value = "gray") +
+  transition_manual(index)
+
+animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
+
+anim_save(filename = "Cases Per Mil Over Time - World Map large 2.gif", 
+          path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+```
+
+```{r animation-cases-per-mil-map-with-points-test}
+#Plots with points instead of highlighting the country
+cases_min = min(dat$cases_per_mil)
+cases_max = max(dat$cases_per_mil)
+
+plot_test = ggplot(data = ncov_newest) +
+  geom_sf(aes(geometry = geometry)) +
+  geom_point(aes(x = X, y = Y,
+                 size = ifelse(Confirmed==0, NA, Confirmed)),
+             shape = 21,
+             colour = "turquoise",
+             alpha = 0.5,
+             fill = "blue") +
+  theme_void() +
+  guides(fill = guide_colorbar(title.position = "top")) +
+  labs(title = "Life Expectancy, ") +
+  theme(plot.title = element_text(
+    hjust = 0.5,
+    vjust = 0.05,
+    size = 25
+  )) +
+  theme(plot.caption = element_text(
+    hjust = 0,
+    color = "gray40",
+    size = 15
+  )) +
+  theme(
+    legend.position = c(.5, .08),
+    legend.direction = "horizontal",
+    legend.title.align = 0,
+    legend.key.size = unit(1.3, "cm"),
+    legend.title = element_text(size = 17),
+    legend.text = element_text(size = 13)
+  )
+plot_test
+ggplotly(plot_test)
+```
+
+```{r animation-cases-per-mil-map-with-points}
+plot_anim = ggplot(data = dat) +
+  geom_sf(aes(geometry = geometry)) +
+  geom_point(aes(x = X, y = Y,
+                 size = ifelse(Confirmed==0, NA, Confirmed)),
+             shape = 21,
+             colour = "turquoise",
+             alpha = 0.5,
+             fill = "blue") +
+  theme_void() +
+  theme(plot.title = element_text(hjust = 0.5,
+      vjust = 0.05,
+      size = 25),
+    legend.position = "none") +
+  transition_manual(as.factor(Date)) +
+  labs(title = "Confirmed Cases: {current_frame}")
+
+animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080, fps = 5)
+#animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 500, height = 300, fps = 5)
+
+anim_save(filename = "Confirmed Cases Over Time - World Map with dots - FPS 5.gif", 
+          path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+
+# animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
+# 
+# anim_save(filename = "Confirmed Cases Over Time - World Map with dots - FPS 10.gif", 
+#           path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+```

@@ -1,5 +1,5 @@
-"0","#Some countries have multiple entries e.g. for certain colonies of the UK"
-"0","#These greatly distort the graphics since these tiny islands have thousands of cases"
+"0","#Some countries have multiple entries in their geometry data e.g. for certain colonies of the UK"
+"0","#The ncov data obviously doesn't account for this so the graphics are greatly distorted since these tiny islands have 'thousands' of cases"
 "0","#These will be removed and only the ""mainland"" kept"
 "0",""
 "0","rows_to_remove = c(13,92,100,158, #Australia"
