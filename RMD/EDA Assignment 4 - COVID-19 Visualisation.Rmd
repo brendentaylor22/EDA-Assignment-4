@@ -392,3 +392,39 @@ anim_save(filename = "Confirmed Cases Over Time - World Map with dots - FPS 5.gi
 # anim_save(filename = "Confirmed Cases Over Time - World Map with dots - FPS 10.gif", 
 #           path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
 ```
+
+```{r total-cases-bar-graph}
+#Summarise confirmed cases per date
+totals = dat_min %>%
+  select(c("Date", "Confirmed", "Recovered", "Deaths")) %>%
+  group_by(Date) %>%
+  summarise_all(list(sum)) #%>%
+  #mutate(Tot = Confirmed + Recovered + Deaths)
+
+totals_test = totals %>%
+  gather(key = "Type", value = "Number", -Date)
+
+plot_test = ggplot(data = totals_test) +
+  geom_bar(aes(x = Date, y = Number,
+               fill = Type),
+           stat = "identity",
+           position = "stack")
+plot_test
+```
+
+```{r animation-bar-plot}
+plot_anim2 = ggplot(data = totals_test) +
+  geom_bar(aes(x = Date, y = Number,
+               fill = Type),
+           stat = "identity",
+           position = "stack") +
+  theme_minimal() +
+  labs(title = "Test 1") +
+  transition_time(Date) +
+  shadow_mark()
+
+animate(plot_anim2, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080, fps = 20)
+
+anim_save(filename = "Barplot WiP.gif", 
+          path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+```
