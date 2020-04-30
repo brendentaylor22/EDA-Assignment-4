@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1584643043596.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2013595054",
+    "id" : "5947EB64",
+    "lastKnownWriteTime" : 1588248954,
+    "last_content_update" : 1588248954977,
+    "path" : "~/Masters - Local/EDA/Assignments/Assignment-4/RMD/EDA Assignment 4 - COVID-19 Visualisation.Rmd",
+    "project_path" : "RMD/EDA Assignment 4 - COVID-19 Visualisation.Rmd",
+    "properties" : {
+        "cursorPosition" : "413,33",
+        "last_setup_crc32" : "639811D3d53fbab0",
+        "scrollLine" : "402",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

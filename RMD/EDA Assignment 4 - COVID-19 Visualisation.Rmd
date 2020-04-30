@@ -22,6 +22,7 @@ library(sf)
 library(spData)
 library(countrycode)
 library(googleVis)
+library(magick)
 #library(leaflet)
 options(scipen=10000) #Remove scientific notation from ggplot legend
 ```
@@ -398,13 +399,10 @@ anim_save(filename = "Confirmed Cases Over Time - World Map with dots - FPS 5.gi
 totals = dat_min %>%
   select(c("Date", "Confirmed", "Recovered", "Deaths")) %>%
   group_by(Date) %>%
-  summarise_all(list(sum)) #%>%
-  #mutate(Tot = Confirmed + Recovered + Deaths)
-
-totals_test = totals %>%
+  summarise_all(list(sum)) %>%
   gather(key = "Type", value = "Number", -Date)
 
-plot_test = ggplot(data = totals_test) +
+plot_test = ggplot(data = totals) +
   geom_bar(aes(x = Date, y = Number,
                fill = Type),
            stat = "identity",
@@ -413,7 +411,7 @@ plot_test
 ```
 
 ```{r animation-bar-plot}
-plot_anim2 = ggplot(data = totals_test) +
+plot_anim2 = ggplot(data = totals) +
   geom_bar(aes(x = Date, y = Number,
                fill = Type),
            stat = "identity",

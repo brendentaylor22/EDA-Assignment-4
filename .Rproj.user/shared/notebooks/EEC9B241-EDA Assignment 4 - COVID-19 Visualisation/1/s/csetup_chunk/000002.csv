@@ -1,16 +1,18 @@
 "0","knitr::opts_chunk$set(echo = FALSE, comment = NA, warning = FALSE)"
 "0","library(tidyverse)"
-"0","library(lubridate)"
-"0","library(ggplot2)"
-"0","library(gganimate)"
-"0","library(rnaturalearth)"
-"0","library(rnaturalearthdata)"
-"0","#library(ggmap)"
-"0","#library(tmap)"
-"0","library(plotly)"
-"0","library(sf)"
-"0","library(spData)"
-"0","library(countrycode)"
-"0","library(googleVis)"
-"0","#library(leaflet)"
-"0","options(scipen=10000) #Remove scientific notation from ggplot legend"
+"2","Registered S3 method overwritten by 'dplyr':
+  method           from
+  print.rowwise_df     
+"
+"2","Registered S3 methods overwritten by 'dbplyr':
+  method         from
+  print.tbl_lazy     
+  print.tbl_sql      
+"
+"2","[30m-- [1mAttaching packages[22m --------------------------------------- tidyverse 1.3.0 --[39m
+"
+"2","[30m[32mv[30m [34mggplot2[30m 3.3.0     [32mv[30m [34mpurrr  [30m 0.3.3
+[32mv[30m [34mtibble [30m 3.0.0     [32mv[30m [34mdplyr  [30m 0.8.5
+[32mv[30m [34mtidyr  [30m 1.0.2     [32mv[30m [34mstringr[30m 1.4.0
+[32mv[30m [34mreadr  [30m 1.3.1     [32mv[30m [34mforcats[30m 0.5.0[39m
+"
