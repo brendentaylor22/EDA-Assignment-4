@@ -1,3 +1,0 @@
-"0","#Remove geom data from 'dat' dataset to speed up animation rendering"
-"0","dat_min = dat %>%"
-"0","  select(-c(geometry))"

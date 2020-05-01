@@ -1,0 +1,5 @@
+"0","dat = get_pop_data()
+"
+"2","Error in left_join(dat, pop_dat, by = c(""iso3c"")) : 
+  promise already under evaluation: recursive default argument reference or earlier problems?
+"

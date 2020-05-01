@@ -1,4 +1,0 @@
-"0","dat = dat %>%"
-"0","  mutate(cat = ifelse(Confirmed <= 1000, 0, "
-"0","                      ifelse(Confirmed>1000 & Confirmed<=10000, 1,"
-"0","                             ifelse(Confirmed>10000 & Confirmed<=100000, 2, 3))))"
