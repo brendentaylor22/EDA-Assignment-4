@@ -6,6 +6,7 @@ library(lubridate)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(countrycode)
+library(sf)
 
 
 
@@ -148,6 +149,20 @@ get_pop_data = function(df = dat){
     mutate(pop = ifelse(Country == "South Sudan", 12580000, pop)) %>%
     mutate(pop = ifelse(Country == "Kosovo", 1831000, pop)) %>% #Add missing populations
     mutate(cases_per_mil = Confirmed*1000000/pop) #Calc cases per million
+  
+  return(df)
+}
+
+add_centroids = function(df = dat){
+  #Centroids are used when plotting geom_point instead of filling the countries based on a colour scale
+  centers = st_centroid(df$geometry)
+  # dat$centers = st_coordinates(centers)
+  df = cbind(df, st_coordinates(centers))
+  
+  #Alaska throws off the center of USA so will set that manually
+  df = df %>%
+    mutate(X = ifelse(Country == "US", -100.522057, X)) %>%
+    mutate(Y = ifelse(Country == "US", 39.975361, Y))
   
   return(df)
 }

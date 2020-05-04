@@ -8,7 +8,10 @@
 #
 
 library(shiny)
+library(ggplot2)
+library(plotly)
 dat = readRDS("ncov-dat.rds")
+ncov_newest = readRDS("ncov-newest.rds")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -17,32 +20,30 @@ ui <- fluidPage(
     titlePanel("Test"),
 
     # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
+    sidebarLayout(sidebarPanel(
+            selectInput(
+            inputId = "country",
+            label = "Country",
+            choices = dat$Country,
+            selected = "South Africa",
+            multiple = T
+        )
+    ), 
 
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("distPlot")
+           plotlyOutput("casesmap")
         )
     )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
+    output$casesmap = renderPlotly({
+        plot_cases_map = ggplot(data = ncov_newest) +
+            geom_sf(aes(geometry = geometry),
+                    fill = ifelse("Vatican" %in% input$country, "red", "blue"))
+        plot_cases_map
     })
 }
 

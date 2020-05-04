@@ -29,7 +29,7 @@ options(scipen=10000) #Remove scientific notation from ggplot legend
 
 ```{r get-data}
 source("get-clean-data.R")
-dat = readRDS("ncov-dat.rds")
+dat = readRDS("Shiny/app/ncov-dat.rds")
 ```
 
 ```{r add-index}
@@ -39,15 +39,17 @@ dat$index = as.numeric(as.factor(dat$Date))
 ```
 
 ```{r add-centroids}
-#Centroids are used when plotting geom_point instead of filling the countries based on a colour scale
-centers = st_centroid(dat$geometry)
-# dat$centers = st_coordinates(centers)
-dat = cbind(dat, st_coordinates(centers))
+# #Centroids are used when plotting geom_point instead of filling the countries based on a colour scale
+# centers = st_centroid(dat$geometry)
+# # dat$centers = st_coordinates(centers)
+# dat = cbind(dat, st_coordinates(centers))
+# 
+# #Alaska throws off the center of USA so will set that manually
+# dat = dat %>%
+#   mutate(X = ifelse(Country == "US", -100.522057, X)) %>%
+#   mutate(Y = ifelse(Country == "US", 39.975361, Y))
 
-#Alaska throws off the center of USA so will set that manually
-dat = dat %>%
-  mutate(X = ifelse(Country == "US", -100.522057, X)) %>%
-  mutate(Y = ifelse(Country == "US", 39.975361, Y))
+dat = add_centroids(df = dat)
 ```
 
 ```{r test-remove2}

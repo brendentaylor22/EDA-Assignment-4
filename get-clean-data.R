@@ -29,5 +29,8 @@ dat = dat_join(df_ncov = ncov, df_geom = world_ne)
 #Population data can be used to work out cases per million people in a country
 dat = get_pop_data(df = dat)
 
+ncov_newest = get_newest(df = dat)
 
-saveRDS(dat, file = "ncov-dat.rds")
+
+saveRDS(dat, file = "Shiny/app/ncov-dat.rds")
+saveRDS(ncov_newest, file = "Shiny/app/ncov-newest.rds")
