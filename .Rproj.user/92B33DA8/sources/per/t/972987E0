@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588610674993.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2805480100",
+    "id" : "972987E0",
+    "lastKnownWriteTime" : 1588348477,
+    "last_content_update" : 1588348477,
+    "path" : "~/Masters - Local/EDA/Assignments/Assignment-4/Shiny/app/app.R",
+    "project_path" : "Shiny/app/app.R",
+    "properties" : {
+        "cursorPosition" : "8,0",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

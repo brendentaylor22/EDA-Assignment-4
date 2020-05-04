@@ -1,0 +1,5 @@
+"0","# dat$centers = st_coordinates(centers)
+dat = cbind(dat, st_coordinates(centers))
+"
+"2","Error in st_coordinates(centers) : object 'centers' not found
+"
