@@ -7,6 +7,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(countrycode)
 library(sf)
+library(plotly)
 
 
 

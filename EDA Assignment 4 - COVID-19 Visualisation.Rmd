@@ -48,8 +48,6 @@ dat$index = as.numeric(as.factor(dat$Date))
 # dat = dat %>%
 #   mutate(X = ifelse(Country == "US", -100.522057, X)) %>%
 #   mutate(Y = ifelse(Country == "US", 39.975361, Y))
-
-dat = add_centroids(df = dat)
 ```
 
 ```{r test-remove2}

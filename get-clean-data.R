@@ -29,6 +29,8 @@ dat = dat_join(df_ncov = ncov, df_geom = world_ne)
 #Population data can be used to work out cases per million people in a country
 dat = get_pop_data(df = dat)
 
+dat = add_centroids(df = dat)
+
 ncov_newest = get_newest(df = dat)
 
 
