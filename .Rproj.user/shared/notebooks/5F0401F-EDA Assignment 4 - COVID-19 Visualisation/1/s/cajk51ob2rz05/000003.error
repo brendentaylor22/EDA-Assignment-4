@@ -1,1 +1,0 @@
-{"frames":[{"character_number":0,"end_character_number":0,"end_line_number":0,"file":"","func":"cbind(dat, st_coordinates(centers))","line_number":0},{"character_number":0,"end_character_number":0,"end_line_number":0,"file":"","func":"st_coordinates(centers)","line_number":0}],"message":"Error in st_coordinates(centers) : object 'centers' not found\n"}

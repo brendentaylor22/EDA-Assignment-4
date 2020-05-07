@@ -1,18 +1,11 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 library(ggplot2)
 library(plotly)
 library(shinydashboard)
 library(lubridate)
 library(dplyr)
+library(sf)
+library(shinycssloaders)
 options(scipen=999)
 
 dat = readRDS("ncov-dat.rds")
@@ -33,7 +26,10 @@ ui = dashboardPage(
                      icon = icon("globe-africa")),
             menuItem("Animation",
                      tabName = "animation",
-                     icon = icon("play-circle"))
+                     icon = icon("play-circle")),
+            menuItem("Data Info",
+                     tabName = "data_info",
+                     icon = icon("question-circle"))
         )
     ),
     dashboardBody(
@@ -51,7 +47,7 @@ ui = dashboardPage(
                         width = 4
                         ),
                     box(title = "",
-                        plotlyOutput("casesmap"),
+                        withSpinner(plotlyOutput("casesmap"), type = 1),
                         width = 8
                     )
                 ),
@@ -79,7 +75,11 @@ ui = dashboardPage(
                 )
             ),
             tabItem(tabName = "animation",
-                    h2("Widgets tab content"))
+                    h2("Widgets tab content")),
+            tabItem(tabName = "data_info",
+                    h2("Data Info"),
+                    withSpinner(uiOutput("info"), type = 1)
+                    )
         )
     )
 )
@@ -91,6 +91,14 @@ server <- function(input, output) {
             filter(Date == input$date)
     })
     
+    output$info = renderUI({
+        tags$p("Download the latest dataset ", 
+               tags$a(href = "https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv",
+                      "here."), 
+               br(), 
+               br(), 
+               "This dataset contains data up to ", max(dat$Date), ".")
+    })
     
     output$casesmap = renderPlotly({
         if (input$metric_options == "confirmed") {
@@ -129,11 +137,15 @@ server <- function(input, output) {
             }
         }
         plot_cases_map
+        
+        
     })
+    
+    
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
 
 
-# rsconnect::deployApp("Shiny/app", appName = "Assignment-4")
+# rsconnect::deployApp(getwd(), appName = "Assignment-4")

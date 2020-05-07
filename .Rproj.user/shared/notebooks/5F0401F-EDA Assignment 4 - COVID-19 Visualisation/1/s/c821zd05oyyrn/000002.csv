@@ -1,0 +1,16 @@
+"0","source(""get-clean-data.R"")"
+"2","
+Attaching package: ‘lubridate’
+
+"
+"2","The following objects are masked from ‘package:dplyr’:
+
+    intersect, setdiff, union
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+"
+"0","dat = readRDS(""Shiny/app/ncov-dat.rds"")"

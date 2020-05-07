@@ -1,0 +1,285 @@
+---
+title: "EDA Assignment 4 - COVID-19 Visualisation"
+author: "Brenden Taylor"
+date: "31/03/2020"
+output: 
+  bookdown::html_document2:
+    number_sections: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = NA, warning = FALSE)
+library(tidyverse)
+#library(lubridate)
+library(ggplot2)
+library(gganimate)
+# library(rnaturalearth)
+# library(rnaturalearthdata)
+#library(ggmap)
+#library(tmap)
+library(plotly)
+library(sf)
+library(spData)
+# library(countrycode)
+library(googleVis)
+#library(magick)
+#library(leaflet)
+options(scipen=10000) #Remove scientific notation from ggplot legend
+```
+
+```{r get-data}
+source("get-clean-data.R")
+dat = readRDS("Shiny/app/ncov-dat.rds")
+```
+
+```{r add-index}
+#Add index to dat based on the date of the observation
+#Used for animations
+dat$index = as.numeric(as.factor(dat$Date))
+```
+
+```{r add-centroids}
+# #Centroids are used when plotting geom_point instead of filling the countries based on a colour scale
+# centers = st_centroid(dat$geometry)
+# # dat$centers = st_coordinates(centers)
+# dat = cbind(dat, st_coordinates(centers))
+# 
+# #Alaska throws off the center of USA so will set that manually
+# dat = dat %>%
+#   mutate(X = ifelse(Country == "US", -100.522057, X)) %>%
+#   mutate(Y = ifelse(Country == "US", 39.975361, Y))
+```
+
+```{r test-remove2}
+#Chunk was used to identify which countries had 'colonies' that were not accounted for in the ncov data
+
+# countries_with_dups = c("Australia", "China", "Cyprus", "Denmark", "Finland", "France", "Netherlands", "New Zealand", "United Kingdom", "US")
+# ncov_newest = ncov_newest %>%
+#   mutate(test2 = ifelse(Country %in% countries_with_dups, 1, 0))
+# 
+# new_plot = function(df) {
+#   plot4 = ggplot() +
+#     geom_sf(data = df, aes(geometry = geometry, fill = test2)) +
+#     scale_color_manual(values = c('1' = 'red', '0' = NA))
+#   #plot4
+#   
+#   ggplotly(plot4)
+# }
+# 
+# test_dat = ncov_newest
+# new_plot(test_dat)
+# 
+# #Remove duplicates
+# 
+# #Remove rows and try
+# test_dat = ncov_newest
+# #test_dat = test_dat[-c(9,11,12,13),] #Aus
+# #test_dat = test_dat[-c(42, 43),] #China
+# #test_dat = test_dat[-c(52),] #Cyprus
+# #test_dat = test_dat[-c(55, 56),] #Denmark
+# #test_dat = test_dat[-c(69),] #Finland
+# #test_dat = test_dat[-c(71,72,74,75,76,77,78),] #France
+# #test_dat = test_dat[-c(136,137,139),] #Netherlands
+# #test_dat = test_dat[-c(140,141),] #NZ
+# #test_dat = test_dat[-c(192,193,194,195,197),] #US
+# #test_dat = test_dat[-c(201,202,203,204,206,207,208,209,210,211,212,213,214,215),] #UK
+# new_plot(test_dat)
+```
+
+```{r remove-geom-data}
+#Remove geom data from 'dat' dataset to speed up animation rendering
+dat_min = dat %>%
+  select(-c(geometry))
+```
+
+```{r animation-cases-per-mil-map-test}
+# cases_min = min(dat$cases_per_mil)
+# cases_max = max(dat$cases_per_mil)
+# 
+# #Static plot to help with layout etc.
+# plot_test = ggplot(data = ncov_newest) +
+#   geom_sf(aes(geometry = geometry,
+#               fill = cases_per_mil)) +
+#   scale_fill_gradient(
+#     name = "Cases Per Million",
+#     low = "blue",
+#     high = "red",
+#     na.value = "gray",
+#     limits = c(cases_min, cases_max)
+#   ) +
+#   #scale_fill_viridis_b(name = "Cases Per Million", begin = 0, end = 1, limits = c(cases_min, cases_max), na.value = "gray") +
+#   theme_void() +
+#   guides(fill = guide_colorbar(title.position = "top")) +
+#   labs(title = "Cases Per Million") +
+#   theme(plot.title = element_text(
+#     hjust = 0.5,
+#     vjust = 0.05,
+#     size = 25
+#   )) +
+#   theme(plot.caption = element_text(
+#     hjust = 0,
+#     color = "gray40",
+#     size = 15
+#   )) +
+#   theme(
+#     legend.position = c(.5, .08),
+#     legend.direction = "horizontal",
+#     legend.title.align = 0,
+#     legend.key.size = unit(1.3, "cm"),
+#     legend.title = element_text(size = 17),
+#     legend.text = element_text(size = 13)
+#   )
+# plot_test
+# ggplotly(plot_test)
+```
+
+```{r animation-cases-per-mil-map}
+# plot_anim = ggplot(data = dat) +
+#   geom_sf(aes(geometry = geometry, 
+#               fill = cases_per_mil)) +
+#   scale_fill_gradient(name = "Cases Per Million", low = "blue", high = "red", na.value = "gray") +
+#   transition_manual(index)
+# 
+# animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
+# 
+# anim_save(filename = "Cases Per Mil Over Time - World Map large 2.gif", 
+#           path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+```
+
+```{r animation-cases-per-mil-map-with-points-test}
+#Plots with points instead of highlighting the country
+cases_min = min(dat$cases_per_mil)
+cases_max = max(dat$cases_per_mil)
+
+
+plot_test = ggplot(data = ncov_newest) +
+  geom_sf(aes(geometry = geometry)) +
+  geom_point(aes(x = X, y = Y,
+                 size = ifelse(Confirmed==0, NA, Confirmed)),
+             shape = 21,
+             colour = "turquoise",
+             alpha = 0.5,
+             fill = "blue") +
+  theme_void() +
+  guides(fill = guide_colorbar(title.position = "top")) +
+  labs(title = "Life Expectancy, ") +
+  theme(plot.title = element_text(
+    hjust = 0.5,
+    vjust = 0.05,
+    size = 25
+  )) +
+  theme(plot.caption = element_text(
+    hjust = 0,
+    color = "gray40",
+    size = 15
+  )) +
+  theme(
+    legend.position = c(.5, .08),
+    legend.direction = "horizontal",
+    legend.title.align = 0,
+    legend.key.size = unit(1.3, "cm"),
+    legend.title = element_text(size = 17),
+    legend.text = element_text(size = 13)
+  ) +
+  scale_radius(range = c(0, 20))
+plot_test
+ggplotly(plot_test)
+```
+
+```{r set-cases-cat}
+#Set a category for each observation based on the number of confirmed cases. This allows for better interpretation of the scale of the points
+dat = dat %>%
+  mutate(cat = ifelse(Confirmed <= 1000, 0, 
+                      ifelse(Confirmed>1000 & Confirmed<=10000, 1,
+                             ifelse(Confirmed>10000 & Confirmed<=100000, 2, 3))))
+```
+
+```{r animation-cases-per-mil-map-with-points}
+plot_anim = ggplot(data = dat) +
+  geom_sf(aes(geometry = geometry)) +
+  geom_point(aes(x = X, y = Y,
+                 size = ifelse(Confirmed==0, NA, Confirmed),
+                 fill = as.factor(cat),
+                 color = as.factor(cat)),
+             shape = 21,
+             alpha = 0.5) +
+  scale_radius(range = c(4, 60)) +
+  #scale_fill_manual(values = c("green", "blue", "orange", "red")) +
+  scale_fill_brewer(palette = "Oranges") +
+  scale_color_brewer(palette = "Oranges") +
+  theme_void() +
+  theme(plot.title = element_text(hjust = 0.5,
+        vjust = 0.05,
+        size = 25),
+      legend.position = c(0.5, 0.08),
+      legend.direction = "horizontal",
+      legend.title = element_text(size = 17),
+      legend.text = element_text(size = 13),
+      legend.key.size = unit(1.3, "cm")) +
+  transition_manual(as.factor(Date)) +
+  labs(title = "Confirmed Cases: {current_frame}",
+       size = "Test") +
+  guides(fill = FALSE, color = F)
+
+a_gif = animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
+
+anim_save(filename = "WiP.gif", 
+          path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+
+
+#animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080, fps = 5)
+#animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 500, height = 300, fps = 5)
+
+#anim_save(filename = "Confirmed Cases Over Time - World Map with dots - FPS 5.gif", 
+#          path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+
+# animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
+# 
+# anim_save(filename = "Confirmed Cases Over Time - World Map with dots - FPS 10.gif", 
+#           path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+```
+
+```{r total-cases-bar-graph}
+#Summarise confirmed cases per date
+totals = dat_min %>%
+  select(c("Date", "Confirmed", "Recovered", "Deaths")) %>%
+  group_by(Date) %>%
+  summarise_all(list(sum)) %>%
+  gather(key = "Type", value = "Number", -Date)
+
+# plot_test = ggplot(data = totals) +
+#   geom_bar(aes(x = Date, y = Number,
+#                fill = Type),
+#            stat = "identity",
+#            position = "stack")
+# plot_test
+```
+
+```{r animation-bar-plot}
+plot_anim2 = ggplot(data = totals) +
+  geom_bar(aes(x = Date, y = Number,
+               fill = Type),
+           stat = "identity",
+           position = "stack") +
+  theme_minimal() +
+  labs(title = "Test 1") +
+  transition_time(Date) +
+  shadow_mark()
+
+b_gif = animate(plot_anim2, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
+
+anim_save(filename = "Barplot WiP.gif", 
+          path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+```
+
+```{r join-gifs}
+magick_a = image_read(a_gif)
+magick_b = image_read(b_gif)
+```
+
+```{r save-dat}
+#Used to save updated data
+saveRDS(dat, file = "ncov-dat.rds")
+```
+
+

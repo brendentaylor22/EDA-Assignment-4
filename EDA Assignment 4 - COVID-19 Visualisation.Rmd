@@ -22,7 +22,7 @@ library(sf)
 library(spData)
 # library(countrycode)
 library(googleVis)
-library(magick)
+#library(magick)
 #library(leaflet)
 options(scipen=10000) #Remove scientific notation from ggplot legend
 ```
@@ -147,43 +147,43 @@ dat_min = dat %>%
 ```
 
 ```{r animation-cases-per-mil-map-with-points-test}
-# #Plots with points instead of highlighting the country
-# cases_min = min(dat$cases_per_mil)
-# cases_max = max(dat$cases_per_mil)
-# 
-# 
-# plot_test = ggplot(data = ncov_newest) +
-#   geom_sf(aes(geometry = geometry)) +
-#   geom_point(aes(x = X, y = Y,
-#                  size = ifelse(Confirmed==0, NA, Confirmed)),
-#              shape = 21,
-#              colour = "turquoise",
-#              alpha = 0.5,
-#              fill = "blue") +
-#   theme_void() +
-#   guides(fill = guide_colorbar(title.position = "top")) +
-#   labs(title = "Life Expectancy, ") +
-#   theme(plot.title = element_text(
-#     hjust = 0.5,
-#     vjust = 0.05,
-#     size = 25
-#   )) +
-#   theme(plot.caption = element_text(
-#     hjust = 0,
-#     color = "gray40",
-#     size = 15
-#   )) +
-#   theme(
-#     legend.position = c(.5, .08),
-#     legend.direction = "horizontal",
-#     legend.title.align = 0,
-#     legend.key.size = unit(1.3, "cm"),
-#     legend.title = element_text(size = 17),
-#     legend.text = element_text(size = 13)
-#   ) +
-#   scale_radius(range = c(0, 20))
-# plot_test
-# ggplotly(plot_test)
+#Plots with points instead of highlighting the country
+cases_min = min(dat$cases_per_mil)
+cases_max = max(dat$cases_per_mil)
+
+
+plot_test = ggplot(data = ncov_newest) +
+  geom_sf(aes(geometry = geometry)) +
+  geom_point(aes(x = X, y = Y,
+                 size = ifelse(Confirmed==0, NA, Confirmed)),
+             shape = 21,
+             colour = "turquoise",
+             alpha = 0.5,
+             fill = "blue") +
+  theme_void() +
+  guides(fill = guide_colorbar(title.position = "top")) +
+  labs(title = "Life Expectancy, ") +
+  theme(plot.title = element_text(
+    hjust = 0.5,
+    vjust = 0.05,
+    size = 25
+  )) +
+  theme(plot.caption = element_text(
+    hjust = 0,
+    color = "gray40",
+    size = 15
+  )) +
+  theme(
+    legend.position = c(.5, .08),
+    legend.direction = "horizontal",
+    legend.title.align = 0,
+    legend.key.size = unit(1.3, "cm"),
+    legend.title = element_text(size = 17),
+    legend.text = element_text(size = 13)
+  ) +
+  scale_radius(range = c(0, 20))
+plot_test
+ggplotly(plot_test)
 ```
 
 ```{r set-cases-cat}
