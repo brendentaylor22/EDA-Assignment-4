@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588348512988.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D40E286F",
+    "lastKnownWriteTime" : 1588620259,
+    "last_content_update" : 1588620259533,
+    "path" : "~/Masters - Local/EDA/Assignments/Assignment-4/get-clean-data.R",
+    "project_path" : "get-clean-data.R",
+    "properties" : {
+        "cursorPosition" : "1,34",
+        "scrollLine" : "0",
+        "tempName" : "Untitled2"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 13,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
