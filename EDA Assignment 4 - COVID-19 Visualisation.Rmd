@@ -9,7 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, comment = NA, warning = FALSE)
-library(tidyverse)
+library(dplyr)
 #library(lubridate)
 library(ggplot2)
 library(gganimate)
@@ -90,6 +90,11 @@ dat$index = as.numeric(as.factor(dat$Date))
 #Remove geom data from 'dat' dataset to speed up animation rendering
 dat_min = dat %>%
   select(-c(geometry))
+
+dat_geom = ncov_newest %>%
+  select(c(Country, geometry))
+
+dat_geom = st_as_sf(dat_geom)
 ```
 
 ```{r animation-cases-per-mil-map-test}
@@ -134,16 +139,30 @@ dat_min = dat %>%
 ```
 
 ```{r animation-cases-per-mil-map}
-# plot_anim = ggplot(data = dat) +
-#   geom_sf(aes(geometry = geometry, 
-#               fill = cases_per_mil)) +
-#   scale_fill_gradient(name = "Cases Per Million", low = "blue", high = "red", na.value = "gray") +
-#   transition_manual(index)
-# 
-# animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
-# 
-# anim_save(filename = "Cases Per Mil Over Time - World Map large 2.gif", 
-#           path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
+plot_anim = ggplot(data = dat) +
+  geom_sf(data = dat_geom) +
+  geom_sf(aes(fill = cases_per_mil)) +
+  scale_fill_gradient(name = "Cases Per Million", low = "blue", high = "red", na.value = "gray") +
+  transition_manual(Date)
+
+animate(plot_anim, renderer = gifski_renderer(loop = FALSE), width = 1920, height = 1080)
+
+
+
+ptm <- ggplot(dat) +
+  geom_sf(data = dat_geom, colour = "#ffffff20", fill = "#2d2d2d60", size = .5) +
+  geom_sf(aes(fill = cases_per_mil, frame = Date)) +
+  scale_fill_distiller(palette = "YlOrRd") +
+  # Here comes the gganimate specific bits
+  labs(title = 'Year: {current_frame}', x = 'GDP per capita', y = 'life expectancy') +
+  transition_manual(year)
+animate(ptm, renderer = gifski_renderer(loop = F))
+
+
+
+
+anim_save(filename = "Cases Per Mil Over Time - World Map large 2.gif",
+          path = "C:/Users/brend/Documents/Masters - Local/EDA/Assignments/Assignment-4/Gifs")
 ```
 
 ```{r animation-cases-per-mil-map-with-points-test}
@@ -196,7 +215,8 @@ dat = dat %>%
 
 ```{r animation-cases-per-mil-map-with-points}
 plot_anim = ggplot(data = dat) +
-  geom_sf(aes(geometry = geometry)) +
+  geom_sf(data = dat_geom) +
+  geom_sf(aes(geometry = geometry, frame = Date)) +
   geom_point(aes(x = X, y = Y,
                  size = ifelse(Confirmed==0, NA, Confirmed),
                  fill = as.factor(cat),

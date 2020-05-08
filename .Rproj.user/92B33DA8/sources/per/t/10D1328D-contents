@@ -1,7 +1,7 @@
 #This script will be used to create and store most of the functions 
 #that will be used in the rest of my assignment
 
-library(tidyverse)
+library(dplyr)
 library(lubridate)
 library(rnaturalearth)
 library(rnaturalearthdata)
@@ -149,7 +149,9 @@ get_pop_data = function(df = dat){
     mutate(pop = ifelse(Country == "Taiwan", 23780000, pop)) %>%
     mutate(pop = ifelse(Country == "South Sudan", 12580000, pop)) %>%
     mutate(pop = ifelse(Country == "Kosovo", 1831000, pop)) %>% #Add missing populations
-    mutate(cases_per_mil = Confirmed*1000000/pop) #Calc cases per million
+    mutate(cases_per_mil = Confirmed*1000000/pop) %>% #Calc cases per million
+    mutate(deaths_per_closed = Deaths/(Deaths+Recovered)*100) #Calc deaths as a percentage
+  #of completed cases
   
   return(df)
 }

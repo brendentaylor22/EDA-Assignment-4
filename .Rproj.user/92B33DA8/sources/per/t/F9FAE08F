@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588924650085.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "F9FAE08F",
+    "lastKnownWriteTime" : 30962681237012590,
+    "last_content_update" : 1588924650085,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "3593D36",
+        "caption" : "dat_geom",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=dat_geom&cache_key=3593D36",
+        "displayedObservations" : 186,
+        "environment" : "",
+        "expression" : "dat_geom",
+        "object" : "dat_geom",
+        "preview" : 0,
+        "totalObservations" : 186,
+        "variables" : 2
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

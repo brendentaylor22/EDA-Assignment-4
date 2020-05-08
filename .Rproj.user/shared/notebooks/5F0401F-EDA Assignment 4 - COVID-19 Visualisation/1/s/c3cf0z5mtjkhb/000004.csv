@@ -1,0 +1,4 @@
+"0","a_gif = animate(plot_anim, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
+"
+"2","Error: stat_sf requires the following missing aesthetics: geometry
+"

@@ -1,0 +1,13 @@
+library(leaflet)
+library(dplyr)
+
+p = leaflet() %>%
+  addTiles()
+
+p
+
+
+
+test = dat %>%
+  filter(Date == "2020-02-13") %>%
+  filter(Confirmed > 0)
