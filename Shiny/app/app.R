@@ -16,6 +16,45 @@ ncov_newest = readRDS("ncov-newest.rds")
 #dat = readRDS("Shiny/app/ncov-dat.rds")
 #ncov_newest = readRDS("Shiny/app/ncov-newest.rds")
 
+add_label = function(df){
+    df$label = paste0(
+        '<b>', df$Country, '</b><br>
+        <table style="width:120px;">
+        <tr><td>Confirmed:</td><td align="right">', df$Confirmed, '</td></tr>
+        <tr><td>Deceased:</td><td align="right">', df$Deaths, '</td></tr>
+        <tr><td>Concluded:</td><td align="right">', df$Deaths+df$Recovered, '</td></tr>
+        <tr><td>Active:</td><td align="right">', df$Confirmed-(df$Deaths+df$Recovered), '</td></tr>
+        </table>'
+    )
+    
+    df$label = lapply(df$label, HTML)
+    
+    return(df)
+}
+
+pal_confirmed = colorBin(
+    palette = "viridis",
+    domain = dat$Confirmed,
+    bins = c(0,5000,10000,50000,100000,1000000,Inf),
+    reverse = T
+)
+
+pal_recovered = colorNumeric(
+    palette = "Greens",
+    domain = dat$Recovered
+)
+
+pal_deaths = colorNumeric(
+    palette = "Reds",
+    domain = dat$Deaths
+)
+
+pal_cases_per_mil = colorNumeric(
+    palette = "Browns",
+    domain = dat$cases_per_mil
+)
+
+
 # Define UI for application that draws a histogram
 ui = dashboardPage(
     dashboardHeader(
@@ -23,12 +62,9 @@ ui = dashboardPage(
     ),
     dashboardSidebar(
         sidebarMenu(
-            menuItem("Static Plot",
-                     tabName = "test",
+            menuItem("Map - Fill",
+                     tabName = "side_by_side",
                      icon = icon("globe-africa")),
-            menuItem("Animation",
-                     tabName = "animation",
-                     icon = icon("play-circle")),
             menuItem("Data Info",
                      tabName = "data_info",
                      icon = icon("question-circle"))
@@ -36,67 +72,38 @@ ui = dashboardPage(
     ),
     dashboardBody(
         tabItems(
-            tabItem(tabName = "test",
-                fluidRow(
-                    box(title = "Options",
-                        dateInput(
-                            inputId = "date",
-                            label = "Date",
-                            min = min(dat$Date),
-                            max = max(dat$Date),
-                            value = max(dat$Date)
-                        ),
-                        width = 4
-                        ),
-                    box(title = "",
-                        withSpinner(plotlyOutput("casesmap"), type = 1),
-                        width = 8
-                    )
-                ),
-                fluidRow(
-                    box(column(width = 6,
-                        title = "Options",
-                        radioButtons(
-                            inputId = "metric_options",
-                            label = "Metric",
-                            choiceNames = c("Confirmed cases",
-                                            "Cases per million citizens",
-                                            "Mortality Rate of Completed Cases"),
-                            choiceValues = c("confirmed",
-                                             "cases_per_mil",
-                                             "deaths_per_completed"))
-                        ),
-                        column(width = 6,
-                        radioButtons(
-                            inputId = "display_options",
-                            label = "Display Options",
-                            choiceNames = c("Fill",
-                                            "Points"),
-                            choiceValues = c("fill",
-                                             "points"))),
-                        width = 12
-                    )
-                )
-            ),
-            tabItem(tabName = "animation",
-                fluidRow(
-                    box(title = "Options",
-                        dateRangeInput(
-                            inputId = "date_range",
-                            label = "Date Range",
-                            start = min(dat$Date),
-                            end = max(dat$Date),
-                            min = min(dat$Date),
-                            max = max(dat$Date),
-                            autoclose = T
-                        ),
-                        width = 4
+            tabItem(tabName = "side_by_side",
+                    fluidRow(
+                        column(
+                            box(title = "",
+                                withSpinner(leafletOutput("points"), type = 1),
+                                width = 12
+                            ),
+                            width = 12
+                        )#,
+                        # column(
+                        #     box(title = "",
+                        #         withSpinner(leafletOutput("fill"), type = 1),
+                        #         width = 12
+                        #     ),
+                        #     width = 6
+                        # )
                     ),
-                    box(title = "",
-                        withSpinner(leafletOutput("animation"), type = 1),
-                        width = 8
+                    fluidRow(
+                        box(title = "",
+                            sliderInput(
+                                inputId = "date_slide",
+                                label = "Select date",
+                                min = min(dat$Date),
+                                max = max(dat$Date),
+                                value = max(dat$Date),
+                                animate = animationOptions(loop = T, 
+                                                           interval = 200),
+                                width = "100%"
+                            ), 
+                            width = 12
+                        )
                     )
-                )
             ),
             tabItem(tabName = "data_info",
                     h2("Data Info"),
@@ -118,10 +125,11 @@ server <- function(input, output) {
     data_range = reactive({
         dat %>%
             # filter(between(Date, input$date_range[1], input$date_range[2]))
-            filter(Date == input$date_range[1])%>%
-            filter(Confirmed > 0)
+            filter(Date == input$date_slide)%>%
+            filter(Confirmed > 0) %>%
+            add_label()
     })
-    
+
     output$info = renderUI({
         tags$p("Download the latest dataset ", 
                tags$a(href = "https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv",
@@ -131,111 +139,106 @@ server <- function(input, output) {
                "This dataset contains data up to ", max(dat$Date), ".")
     })
     
-    output$casesmap = renderPlotly({
-        p = ggplot(data = data_date())
-        if (input$metric_options == "confirmed") {
-            if(input$display_options == "fill"){
-                p = p +
-                    geom_sf(aes(geometry = geometry,
-                            fill = Confirmed)) +
-                    theme_minimal()
-            }else{
-                p = p +
-                    geom_sf(aes(geometry = geometry)) +
-                    geom_point(aes(x = X, y = Y,
-                        size = ifelse(Confirmed==0, NA, Confirmed)),
-                        shape = 21,
-                        colour = "turquoise",
-                        alpha = 0.5,
-                        fill = "blue") +
-                    theme_minimal()
-            }
-        }else if(input$metric_options == "cases_per_mil"){
-            if(input$display_options == "points"){
-                p = p +
-                    geom_sf(aes(geometry = geometry)) +
-                    geom_point(aes(x = X, y = Y,
-                        size = ifelse(cases_per_mil==0, NA, cases_per_mil)),
-                        shape = 21,
-                        colour = "turquoise",
-                        alpha = 0.5,
-                        fill = "blue") +
-                    theme_minimal()
-            }else{
-                p = p +
-                    geom_sf(aes(geometry = geometry,
-                        fill = cases_per_mil)) +
-                    theme_minimal()
-            }
-        } else{
-            if(input$display_options == "points"){
-                p = p +
-                    geom_sf(aes(geometry = geometry)) +
-                    geom_point(aes(x = X, y = Y,
-                                   size = ifelse(deaths_per_closed==0, NA, deaths_per_closed)),
-                               shape = 21,
-                               colour = "turquoise",
-                               alpha = 0.5,
-                               fill = "blue") +
-                    theme_minimal()
-            }else{
-                p = p +
-                    geom_sf(aes(geometry = geometry,
-                                fill = deaths_per_closed)) +
-                    theme_minimal()
-            }
-        }
-        p
-        
-        
-    })
+    # output$fill = renderLeaflet({
+    #     p = leaflet() %>%
+    #         setMaxBounds(-180, -90, 180, 90) %>%
+    #         setView(lng = 0,
+    #                 lat = 20,
+    #                 zoom = 2) %>%
+    #         addTiles(options = tileOptions(
+    #             minZoom = 1
+    #         )) %>%
+    #         addLayersControl(
+    #             baseGroups = c("Confirmed Cases",
+    #                            "Deceased",
+    #                            "Recovered",
+    #                            "Cases per million")
+    #         ) %>%
+    #         hideGroup("Deceased") %>%
+    #         hideGroup("Recovered") %>%
+    #         hideGroup("Cases per million")
+    # })
     
-    # output$animation = renderPlotly({
-    #     p = ggplot(data = data_range())
-    #     
-    #     p = p +
-    #         geom_sf(aes(geometry = geometry)) +
-    #         geom_point(aes(x = X, y = Y,
-    #                        size = ifelse(Confirmed==0, NA, Confirmed),
-    #                        frame = as.factor(Date)),
-    #                    shape = 21,
-    #                    alpha = 0.5) +
-    #         theme_minimal()
-    #     
-    #     ggplotly(p)
-    
-    output$animation = renderLeaflet({
+    output$points = renderLeaflet({
         p = leaflet() %>%
             setMaxBounds(-180, -90, 180, 90) %>%
             setView(lng = 0,
                     lat = 20, 
                     zoom = 2) %>%
-            addTiles()
-            # addCircles(lng = ~X,
-            #            lat = ~Y,
-            #            data = data_range(),
-            #            stroke = F,
-            #            fillOpacity = 0.5,
-            #            radius = ~ifelse(Confirmed == 0, NA, Confirmed))
-        
-        # p
+            addTiles(options = tileOptions(
+                minZoom = 1
+            )) %>%
+            addLayersControl(
+                baseGroups = c("Confirmed Cases",
+                               "Deceased",
+                               "Recovered",
+                               "Cases per million")
+            ) %>%
+            hideGroup("Deceased") %>%
+            hideGroup("Recovered") %>%
+            hideGroup("Cases per million")
     })
     
     observe({
         # req(input$animation_zoom)
-        zoom_level = input$animation_zoom
+        zoom_points = input$points_zoom
         
-        leafletProxy("animation", data = data_range()) %>%
+        # leafletProxy("fill", data = data_range()) %>%
+        #     addPolygons(data = data_range()$geometry,
+        #                 weight = 1,
+        #                 fillOpacity = 0.2,
+        #                 fillColor = ~colorQuantile("YlOrRd", domain = data_range()$Confirmed),
+        #                 group = "Confirmed Cases")
+        
+        leafletProxy("points", data = data_range()) %>%
+            clearMarkers() %>%
             addCircleMarkers(
                 lng = ~X,
                 lat = ~Y,
-                # radius = ~ifelse(Confirmed == 0, 
-                #                  NA, 
-                #                  log(Confirmed^(zoom_level/2))),
-                radius = ~log(Confirmed^(zoom_level/2)),
+                radius = ~log2(Confirmed^(zoom_points/2)),
                 stroke = F,
-                fillOpacity = 0.6
+                fillOpacity = 0.6,
+                label = ~label,
+                group = "Confirmed Cases",
+                color = ~pal_confirmed(Confirmed)
+            ) %>%
+            addCircleMarkers(
+                lng = ~X,
+                lat = ~Y,
+                radius = ~log2(Deaths^(zoom_points/2)),
+                stroke = F,
+                fillOpacity = 0.6,
+                label = ~label,
+                group = "Deceased",
+                color = ~pal_deaths(Deaths)
+            ) %>%
+            addCircleMarkers(
+                lng = ~X,
+                lat = ~Y,
+                radius = ~log2(Recovered^(zoom_points/2)),
+                stroke = F,
+                fillOpacity = 0.6,
+                label = ~label,
+                group = "Recovered",
+                color = ~pal_recovered(Recovered)
+            ) %>%
+            addCircleMarkers(
+                lng = ~X,
+                lat = ~Y,
+                radius = ~log2(cases_per_mil^(zoom_points/2)),
+                stroke = F,
+                fillOpacity = 0.6,
+                label = ~label,
+                group = "Cases per million",
+                color = ~pal_cases_per_mil(cases_per_mil)
+            ) %>%
+            addLegend(
+                position = "bottomright",
+                pal = pal_confirmed,
+                values = ~Confirmed,
+                group = "Deaths"
             )
+            
     })
 }
 
@@ -244,3 +247,5 @@ shinyApp(ui = ui, server = server)
 
 
 # rsconnect::deployApp(getwd(), appName = "Assignment-4")
+# rsconnect::deployApp("Shiny/app", appName = "Assignment-4")
+

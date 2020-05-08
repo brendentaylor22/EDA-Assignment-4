@@ -5,14 +5,14 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "3542201323",
+    "hash" : "2504495892",
     "id" : "D40E286F",
-    "lastKnownWriteTime" : 1588620259,
-    "last_content_update" : 1588620259533,
+    "lastKnownWriteTime" : 1588935897,
+    "last_content_update" : 1588935897453,
     "path" : "~/Masters - Local/EDA/Assignments/Assignment-4/get-clean-data.R",
     "project_path" : "get-clean-data.R",
     "properties" : {
-        "cursorPosition" : "6,54",
+        "cursorPosition" : "5,0",
         "scrollLine" : "0",
         "tempName" : "Untitled2"
     },

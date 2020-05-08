@@ -84,7 +84,7 @@ add_countrycodes = function(df_ncov = ncov, df_geom = world_ne) {
     mutate(iso3c = ifelse(sovereignt == "Vatican", "VAT", iso3c))
   
   #world_ne contains 2 Israel entries. Row 179 is West Bank and Gaza so will be renamed
-  df_geom[180, 1] = "West Bank and Gaza"
+  df_geom[148, 1] = "West Bank and Gaza"
   df_geom = df_geom %>%
     mutate(iso3c = ifelse(sovereignt == "West Bank and Gaza", "PSE", iso3c))
   
