@@ -1,13 +1,18 @@
-library(leaflet)
-library(dplyr)
-
-p = leaflet() %>%
-  addTiles()
-
-p
 
 
+test2 = dat %>%
+  select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil")) %>%
+  group_by(Country) %>%
+  summarise(Confirmed = max(Confirmed)) %>%
+  top_n(n = 2, wt = Confirmed)
 
+test_names = as.character(test2$Country)
+
+dat_5 = dat %>%
+  select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil")) %>%
+  filter(Country %in% test_names) %>%
+  group_by(Country, Date)
+
+temp_names
 test = dat %>%
-  filter(Date == "2020-02-13") %>%
-  filter(Confirmed > 0)
+  filter(Country %in% temp_names)
