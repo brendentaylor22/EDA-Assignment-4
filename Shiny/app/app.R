@@ -35,23 +35,29 @@ add_label = function(df){
 pal_confirmed = colorBin(
     palette = "viridis",
     domain = dat$Confirmed,
-    bins = c(0,5000,10000,50000,100000,1000000,Inf),
+    bins = c(0,500,1000,5000,10000,50000,100000,1000000,Inf),
     reverse = T
 )
 
-pal_recovered = colorNumeric(
-    palette = "Greens",
-    domain = dat$Recovered
+pal_recovered = colorBin(
+    palette = "viridis",
+    domain = dat$Recovered,
+    bins = c(0, 500, 1000, 10000, 100000, 150000, Inf),
+    reverse = T
 )
 
-pal_deaths = colorNumeric(
-    palette = "Reds",
-    domain = dat$Deaths
+pal_deaths = colorBin(
+    palette = "viridis",
+    domain = dat$Deaths,
+    bins = c(0, 50, 500, 1000, 10000, 50000, 100000, Inf),
+    reverse = T
 )
 
-pal_cases_per_mil = colorNumeric(
-    palette = "Browns",
-    domain = dat$cases_per_mil
+pal_cases_per_mil = colorBin(
+    palette = "viridis",
+    domain = dat$cases_per_mil,
+    bins = c(0, 2, 5, 10, 50, 100, 1000, 5000, Inf),
+    reverse = T
 )
 
 
@@ -231,14 +237,54 @@ server <- function(input, output) {
                 label = ~label,
                 group = "Cases per million",
                 color = ~pal_cases_per_mil(cases_per_mil)
-            ) %>%
-            addLegend(
-                position = "bottomright",
-                pal = pal_confirmed,
-                values = ~Confirmed,
-                group = "Deaths"
-            )
+            ) #%>%
+            # addLegend(
+            #     position = "bottomright",
+            #     pal = pal_confirmed,
+            #     values = ~Confirmed
+            # )
             
+    })
+    
+    
+    
+    
+    #########Leaflet Issue #477
+    observeEvent(input$points_groups,{
+        leafletProxy("points") %>% 
+            removeControl(layerId = "Confirmed Cases") %>% 
+            removeControl(layerId = "Deceased") %>%
+            removeControl(layerId = "Recovered") %>%
+            removeControl(layerId = "Cases per million")
+        
+        if ('Confirmed Cases' %in% isolate(input$points_groups)){
+            leafletProxy('points', data = data_range()) %>% 
+                clearControls() %>%
+                addLegend(position = "bottomright",
+                          pal = pal_confirmed,
+                          values = ~Confirmed)
+        }
+        else if ('Deceased' %in% isolate(input$points_groups)){
+            leafletProxy('points', data = data_range()) %>% 
+                clearControls() %>%
+                addLegend(position = "bottomright",
+                          pal = pal_deaths,
+                          values = ~Deaths)
+        }
+        else if ('Recovered' %in% isolate(input$points_groups)){
+            leafletProxy('points', data = data_range()) %>% 
+                clearControls() %>%
+                addLegend(position = "bottomright",
+                          pal = pal_recovered,
+                          values = ~Recovered)
+        }
+        else if ('Cases per million' %in% isolate(input$points_groups)){
+            leafletProxy('points', data = data_range()) %>% 
+                clearControls() %>%
+                addLegend(position = "bottomright",
+                          pal = pal_cases_per_mil,
+                          values = ~cases_per_mil)
+        }
     })
 }
 

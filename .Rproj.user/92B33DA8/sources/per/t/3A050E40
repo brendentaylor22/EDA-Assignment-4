@@ -12,16 +12,16 @@
     "path" : null,
     "project_path" : null,
     "properties" : {
-        "cacheKey" : "B1D615B5",
+        "cacheKey" : "D039A190",
         "caption" : "ncov_newest",
-        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=ncov_newest&cache_key=B1D615B5",
-        "displayedObservations" : 185,
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=ncov_newest&cache_key=D039A190",
+        "displayedObservations" : "185",
         "environment" : "",
         "expression" : "ncov_newest",
         "object" : "ncov_newest",
-        "preview" : 0,
-        "totalObservations" : 185,
-        "variables" : 12
+        "preview" : "0",
+        "totalObservations" : "185",
+        "variables" : "12"
     },
     "read_only" : false,
     "read_only_alternatives" : [
