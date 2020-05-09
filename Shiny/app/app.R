@@ -14,12 +14,12 @@ options(scipen=999)
 dat = readRDS("ncov-dat.rds")
 dat = dat %>%
     select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil",
-             "X", "Y"))
+             "X", "Y", "deaths_per_closed"))
 
 ncov_newest = readRDS("ncov-newest.rds")
 ncov_newest = ncov_newest %>%
     select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil",
-             "X", "Y"))
+             "X", "Y", "deaths_per_closed"))
 
 dat_temp = dat %>%
     group_by(Country) %>%
@@ -185,13 +185,36 @@ ui = dashboardPage(
                                         ),
                             width = 12,
                             ),
-                        width = 6
+                        width = 12
                     )
                 ),
                 fluidRow(
                     column(
                         box(title = "Confirmed Cases",
                             withSpinner(plotlyOutput("cum_cases"), type = 1),
+                            width = 12
+                        ),
+                        width = 6
+                    ),
+                    column(
+                        box(title = "Deaths",
+                            withSpinner(plotlyOutput("deaths"), type = 1),
+                            width = 12
+                        ),
+                        width = 6
+                    )
+                ),
+                fluidRow(
+                    column(
+                        box(title = "Recovered",
+                            withSpinner(plotlyOutput("recovered"), type = 1),
+                            width = 12
+                        ),
+                        width = 6
+                    ),
+                    column(
+                        box(title = "Deaths Per Closed Cases",
+                            withSpinner(plotlyOutput("deaths_per_closed"), type = 1),
                             width = 12
                         ),
                         width = 6
@@ -224,7 +247,7 @@ server <- function(input, output) {
             filter(if(is.null(input$table_country)) TRUE else Country %in% input$table_country)
     })
     
-    data_cases = reactive({
+    data_countries = reactive({
         dat %>%
             filter(Country %in% input$plot_country)
     })
@@ -250,7 +273,7 @@ server <- function(input, output) {
     })
     
     output$cum_cases = renderPlotly({
-        p = ggplot(data = data_cases()) +
+        p = ggplot(data = data_countries()) +
                 geom_line(aes(x = Date,
                              y = Confirmed,
                              color = Country)) +
@@ -258,14 +281,39 @@ server <- function(input, output) {
             labs(y = "Confirmed Cases")
         
         ggplotly(p)
+    })
+    
+    output$deaths = renderPlotly({
+        p = ggplot(data = data_countries()) +
+            geom_line(aes(x = Date,
+                          y = Deaths,
+                          color = Country)) +
+            theme_minimal() +
+            labs(y = "Deaths")
         
-       # plot_ly(data = data_cum_cases(),
-       #         x = ~Date,
-       #         y = ~Confirmed,
-       #         type = "scatter",
-       #         mode = "lines",
-       #         color = ~as.factor(Country)
-       #  )
+        ggplotly(p)
+    })
+    
+    output$recovered = renderPlotly({
+        p = ggplot(data = data_countries()) +
+            geom_line(aes(x = Date,
+                          y = Recovered,
+                          color = Country)) +
+            theme_minimal() +
+            labs(y = "Recovered")
+        
+        ggplotly(p)
+    })
+    
+    output$deaths_per_closed = renderPlotly({
+        p = ggplot(data = data_countries()) +
+            geom_line(aes(x = Date,
+                          y = deaths_per_closed,
+                          color = Country)) +
+            theme_minimal() +
+            labs(y = "Deaths Per Closed Case")
+        
+        ggplotly(p)
     })
     
     output$points = renderLeaflet({
