@@ -1,7 +1,7 @@
 ---
 title: "EDA Assignment 4 - COVID-19 Visualisation"
 author: "Brenden Taylor"
-date: "31/03/2020"
+date: "11/05/2020"
 output: 
   bookdown::html_document2:
     number_sections: no
@@ -16,7 +16,7 @@ library(gganimate)
 # library(rnaturalearth)
 # library(rnaturalearthdata)
 #library(ggmap)
-library(tmap)
+# library(tmap)
 library(plotly)
 library(sf)
 library(spData)
@@ -27,13 +27,18 @@ library(tidyr)
 #library(leaflet)
 options(scipen=10000) #Remove scientific notation from ggplot legend
 ```
-
-```{r get-data}
-#Get up-to-date data
-source("get-clean-data.R")
-
+# Section 1
+```{r get-data, include=FALSE}
 #Read data in
 dat = readRDS("Shiny/app/ncov-dat.rds")
+
+#If current data is old, get new data
+#I add 1 to max date because online data is only updated at the end of each day
+if(max(dat$Date) +1 < Sys.Date()){
+  source("get-clean-data.R")
+  dat = readRDS("Shiny/app/ncov-dat.rds")
+}
+#Read in only most recent day's data
 ncov_newest = readRDS("Shiny/app/ncov-newest.rds")
 ```
 
@@ -57,18 +62,18 @@ totals = dat_min %>%
   gather(key = "Type", value = "Number", -Date)
 ```
 
-```{r animation}
+```{r animation-map}
 p = ggplot(data = dat) +
   geom_sf(aes(geometry = geometry,
               fill = Deaths),
-          alpha = 0.3) +
+          alpha = 0.4) +
   coord_sf(datum = NA) +
   geom_point(aes(x = X, y = Y,
                  size = ifelse(Confirmed==0, NA, Confirmed)),
              shape = 21,
              colour = "turquoise",
-             alpha = 0.5,
-             fill = "turquoise") +
+             alpha = 0.3,
+             fill = "blue") +
   scale_radius(range = c(4, 60), name = "Confirmed Cases") +
   scale_fill_gradient2(low = ("blue"),
                        mid = "orange",
@@ -78,18 +83,19 @@ p = ggplot(data = dat) +
   labs(title = "Date: {current_frame}", x = "", y = "") +
   theme(plot.title = element_text(hjust = 0.5,
         vjust = 0.05,
-        size = 25),
+        size = 30),
       legend.position = "bottom",
       legend.direction = "horizontal",
       legend.title = element_text(size = 20),
-      legend.text = element_text(size = 16),
-      legend.key.size = unit(1.5, "cm"),
+      legend.text = element_text(size = 20),
+      legend.key.width = unit(3, "cm"),
       legend.box = "vertical",
       legend.text.align = 0.5) +
   transition_manual(Date) +
   guides(color = F)
 
 gif = animate(p, renderer = gifski_renderer(loop = T), width = 1920, height = 1080)
+gif
 anim_save(filename = "Gif - Fill Deaths - Point Cases.gif",
           path = "Gifs")
 ```
@@ -256,7 +262,8 @@ anim_save(filename = "Gif - Fill Deaths - Point Cases.gif",
 #           path = "Gifs")
 ```
 
-```{r}
+```{r animation-cases}
+#Get total number of confirmed cases
 cases = totals %>%
   filter(Type == "Confirmed") %>%
   select(c("Date", "Number"))
@@ -264,15 +271,13 @@ cases = totals %>%
 plot_line = ggplot(data = totals,
                    aes(x = Date, 
                        y = Number,
-                       color = Type,
                        fill = Type)) +
   geom_area() +
   theme_minimal() +
   labs(title = "",
-       x = "Date",
+       x = "",
        y = "") +
-  scale_fill_brewer("viridis") +
-  scale_color_brewer("viridis") +
+  scale_fill_brewer("",palette = "Set1") +
   theme(plot.title = element_text(hjust = 0.5,
         vjust = 0.05,
         size = 25),

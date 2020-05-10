@@ -5,16 +5,17 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "1683073488",
+    "hash" : "2697443361",
     "id" : "613CF214",
-    "lastKnownWriteTime" : 1589127688,
-    "last_content_update" : 1589127688399,
+    "lastKnownWriteTime" : 1589140425,
+    "last_content_update" : 1589140425408,
     "path" : "~/Masters - Local/EDA/Assignments/Assignment-4/EDA Assignment 4 - COVID-19 Visualisation.Rmd",
     "project_path" : "EDA Assignment 4 - COVID-19 Visualisation.Rmd",
     "properties" : {
-        "cursorPosition" : "291,0",
-        "last_setup_crc32" : "99DB1D6Be22deec1",
-        "scrollLine" : "270"
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "64,20",
+        "last_setup_crc32" : "DBBFEFE920901f01",
+        "scrollLine" : "58"
     },
     "read_only" : false,
     "read_only_alternatives" : [

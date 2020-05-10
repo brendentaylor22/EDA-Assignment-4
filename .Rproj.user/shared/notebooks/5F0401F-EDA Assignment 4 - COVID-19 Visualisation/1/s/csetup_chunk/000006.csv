@@ -1,89 +1,17 @@
 "0","knitr::opts_chunk$set(echo = FALSE, comment = NA, warning = FALSE)"
 "0","library(dplyr)"
-"2","Registered S3 method overwritten by 'dplyr':
-  method           from
-  print.rowwise_df     
-"
-"2","
-Attaching package: ‘dplyr’
-
-"
-"2","The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-"
-"2","The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-"
 "0","#library(lubridate)"
 "0","library(ggplot2)"
 "0","library(gganimate)"
 "0","# library(rnaturalearth)"
 "0","# library(rnaturalearthdata)"
 "0","#library(ggmap)"
-"0","library(tmap)"
-"2","Registered S3 methods overwritten by 'htmltools':
-  method               from         
-  print.html           tools:rstudio
-  print.shiny.tag      tools:rstudio
-  print.shiny.tag.list tools:rstudio
-"
-"2","Registered S3 method overwritten by 'htmlwidgets':
-  method           from         
-  print.htmlwidget tools:rstudio
-"
+"0","# library(tmap)"
 "0","library(plotly)"
-"2","Registered S3 method overwritten by 'data.table':
-  method           from
-  print.data.table     
-"
-"2","
-Attaching package: ‘plotly’
-
-"
-"2","The following object is masked from ‘package:ggplot2’:
-
-    last_plot
-
-"
-"2","The following object is masked from ‘package:stats’:
-
-    filter
-
-"
-"2","The following object is masked from ‘package:graphics’:
-
-    layout
-
-"
 "0","library(sf)"
-"2","Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 6.3.1
-"
 "0","library(spData)"
 "0","# library(countrycode)"
 "0","library(googleVis)"
-"2","Creating a generic function for ‘toJSON’ from package ‘jsonlite’ in package ‘googleVis’
-"
-"2","
-Welcome to googleVis version 0.6.4
-
-Please read Google's Terms of Use
-before you start using the package:
-https://developers.google.com/terms/
-
-Note, the plot method of googleVis will by default use
-the standard browser to display its output.
-
-See the googleVis package vignettes for more details,
-or visit https://github.com/mages/googleVis.
-
-To suppress this message use:
-suppressPackageStartupMessages(library(googleVis))
-
-"
 "0","library(tidyr)"
 "0","#library(magick)"
 "0","#library(leaflet)"

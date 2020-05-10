@@ -1,4 +1,6 @@
-"0","source(""get-clean-data.R"")
+"0","if(max(dat$Date) < Sys.Date()){
+  source(""get-clean-data.R"")
+}
 "
 "2","
 Attaching package: ‘lubridate’
