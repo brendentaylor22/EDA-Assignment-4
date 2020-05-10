@@ -94,7 +94,7 @@ ui = dashboardPage(
     ),
     dashboardSidebar(
         sidebarMenu(
-            menuItem("Map - Fill",
+            menuItem("Map",
                      tabName = "side_by_side",
                      icon = icon("globe-africa")),
             menuItem("Data Table",

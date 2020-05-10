@@ -1,0 +1,4 @@
+"0","dat_geom = st_as_sf(dat_geom)
+"
+"2","Error in st_as_sf(dat_geom) : object 'dat_geom' not found
+"

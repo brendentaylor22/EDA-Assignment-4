@@ -1,0 +1,1 @@
+{"frames":[{"character_number":0,"end_character_number":0,"end_line_number":0,"file":"","func":"st_as_sf(dat_geom)","line_number":0}],"message":"Error in st_as_sf(dat_geom) : object 'dat_geom' not found\n"}

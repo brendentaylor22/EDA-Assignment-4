@@ -26,25 +26,40 @@ get_ncov_data = function() {
 
 #Get geometry data
 get_geom_data = function(){
-  world_ne0 = ne_countries(scale = "medium", returnclass = "sf", type = "countries")
-  world_ne = world_ne0 %>%
-    select(c(sovereignt, geometry))
-  
   #Some countries have multiple entries in their geometry data e.g. for certain colonies of the UK
   #The ncov data obviously doesn't account for this so the graphics are greatly distorted since these tiny islands have 'thousands' of cases
   #These will be removed and only the "mainland" kept
-  rows_to_remove = c(13,92,100,158, #Australia
-                     91, 133, #China
-                     55, #Cyprus
-                     74,87, #Denmark
-                     6, #Finland
-                     14,28,134,156,181,200,236, #France
-                     1, 53, 208, #Netherlands
-                     47,161, #NZ
-                     11,89,148,176,233, #US
-                     4,31,54,72,79,98,101,109,151,170,192,193,211,232) #UK
   
-  world_ne = world_ne[-rows_to_remove,]
+  world_ne0 = ne_countries(scale = "medium", returnclass = "sf", type = "countries") %>%
+    select(c(sovereignt, geometry)) %>%
+    mutate(area = st_area(geometry))
+  
+  countries_w_duplicates = world_ne0 %>%
+    group_by(sovereignt) %>%
+    filter(n()>1)
+  
+  israel_and_pales = countries_w_duplicates %>%
+    filter(sovereignt == "Israel") %>%
+    arrange(desc(area))
+  
+  israel = israel_and_pales[1, ]
+  pales = israel_and_pales[2, ]
+  pales[1, 1] = "West Bank and Gaza"
+  
+  countries_w_duplicates_excl_israel = countries_w_duplicates %>%
+    filter(!(sovereignt %in% c("Israel")))
+  
+  unique_dups = countries_w_duplicates_excl_israel %>%
+    group_by(sovereignt) %>%
+    top_n(1, area)
+  
+  world_excl_dups = world_ne0 %>%
+    filter(!(sovereignt %in% unique(countries_w_duplicates$sovereignt)))
+  
+  world_ne = rbind(world_excl_dups, unique_dups, israel, pales)
+  
+  world_ne = world_ne %>%
+    select(c(sovereignt, geometry))
   
   return(world_ne)
 }
@@ -84,7 +99,6 @@ add_countrycodes = function(df_ncov = ncov, df_geom = world_ne) {
     mutate(iso3c = ifelse(sovereignt == "Vatican", "VAT", iso3c))
   
   #world_ne contains 2 Israel entries. Row 179 is West Bank and Gaza so will be renamed
-  df_geom[148, 1] = "West Bank and Gaza"
   df_geom = df_geom %>%
     mutate(iso3c = ifelse(sovereignt == "West Bank and Gaza", "PSE", iso3c))
   

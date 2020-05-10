@@ -1,6 +1,0 @@
-"0","dat_geom = dat %>%
-  select(c(Country, geometry)) %>%
-  unique(Country, geometry)
-"
-"2","Error in isFALSE(incomparables) : object 'Country' not found
-"
