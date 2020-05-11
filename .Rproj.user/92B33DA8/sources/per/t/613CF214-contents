@@ -27,8 +27,8 @@ library(tidyr)
 #library(leaflet)
 options(scipen=10000) #Remove scientific notation from ggplot legend
 ```
-# Section 1
-```{r get-data, include=FALSE}
+# Animations
+```{r get-data, include=FALSE, eval=FALSE}
 #Read data in
 dat = readRDS("Shiny/app/ncov-dat.rds")
 
@@ -42,7 +42,7 @@ if(max(dat$Date) +1 < Sys.Date()){
 ncov_newest = readRDS("Shiny/app/ncov-newest.rds")
 ```
 
-```{r remove-geom-data}
+```{r remove-geom-data, eval = FALSE}
 #Remove geom data from 'dat' dataset to speed up processing
 dat_min = dat %>%
   select(-c(geometry))
@@ -53,7 +53,7 @@ dat_geom = ncov_newest %>%
 dat_geom = st_as_sf(dat_geom)
 ```
 
-```{r totals}
+```{r totals, eval = FALSE}
 #Create data frame of cumulative counts
 totals = dat_min %>%
   select(c("Date", "Confirmed", "Recovered", "Deaths")) %>%
@@ -62,7 +62,7 @@ totals = dat_min %>%
   gather(key = "Type", value = "Number", -Date)
 ```
 
-```{r animation-map}
+```{r animation-map, eval=FALSE}
 p = ggplot(data = dat) +
   geom_sf(aes(geometry = geometry,
               fill = Deaths),
@@ -262,7 +262,7 @@ anim_save(filename = "Gif - Fill Deaths - Point Cases.gif",
 #           path = "Gifs")
 ```
 
-```{r animation-cases}
+```{r animation-cases, eval=FALSE}
 #Get total number of confirmed cases
 cases = totals %>%
   filter(Type == "Confirmed") %>%
@@ -295,4 +295,28 @@ animate(plot_line, renderer = gifski_renderer(loop = TRUE), width = 1920, height
 anim_save(filename = "Line.gif", 
           path = "Gifs")
 ```
+
+![Map](Gif - Fill Deaths - Point Cases.gif)
+
+![Line](Line.gif)
+
+# Written Piece
+
+COVID-19 has, in the literal sense, gone viral this year. Every day, we see graphs and infographics, news articles and interviews, and it's often quite difficult making sense of these sources of information. This has lead to a rise in 'Facebook Virologists' and 'WhatsApp Journalists' who spread news far and wide without fully understanding it, or knowing where it came from. Particularly now, during a global pandemic, this is dangerous and irresponsible (see [the bleach cure](https://www.bbc.com/news/world-us-canada-52407177)).Today we're going to unpack what we think are two of the more useful animations, and also point out some things you need to be careful of when interpreting any sort of statistical visualisation.
+
+Before we take a look at some graphics though, it's important to know that comparisons between countries are generally not a good idea. Different countries are just that - different! They have different populations with different socio-economic circumstances, different economies, different healthcare systems and different priorities. These differences make it very difficult to accurately compare the impact of COVID-19 in multiple countries and we need to be aware of this. For example, one shouldn't be suprised to find out that the USA has way more deaths due to the virus than New Zealand. Firstly, the US has a population far greater than New Zealand's. Secondly, the US has more confirmed cases. Thirdly, the US had its first case before New Zealand so the virus has had more time to run its course in the US.
+
+Of course, comparisons can still be made but we just need to be aware that there are differences and it might be one of these underlying differences that explains something, not what we think it is!
+
+## The Map
+
+The first animation is the classic map.
+
+![Map](Gif - Fill Deaths - Point Cases.gif)
+
+This is one of the nicer animations out there simply because it can show a fair amount of information, while still being quite easily intepreted. 
+
+Firstly, we can see that the title is running through dates so we know that the picture is changing as time goes on (this is pretty much always the case for COVID-19 GIFs because that's what we want to see: how things change over time!). Secondly, we need to take careful note of the legends so we can get a better understanding of what this GIF is showing us. In this case, there are two legends. The colour scale shows us the number of deaths in a country while the size of the circle over a country indicates the number of confirmed cases.
+
+
 
