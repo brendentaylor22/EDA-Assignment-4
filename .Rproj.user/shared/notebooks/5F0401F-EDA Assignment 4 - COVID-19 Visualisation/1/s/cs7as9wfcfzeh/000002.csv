@@ -1,4 +1,5 @@
-"0","gif = animate(p, renderer = gifski_renderer(loop = T), width = 1920, height = 1080)
+"0","#Animate map
+map_gif = animate(p, renderer = gifski_renderer(loop = T), width = 1920, height = 1080)
 "
 "1","Frame 1 (1%)"
 "1","Frame 2 (2%)"

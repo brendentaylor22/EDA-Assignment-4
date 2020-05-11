@@ -1,4 +1,4 @@
-"0","animate(plot_line, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
+"0","area_gif = animate(plot_area, renderer = gifski_renderer(loop = TRUE), width = 1920, height = 1080)
 "
 "1","Frame 1 (1%)"
 "1","Frame 2 (2%)"

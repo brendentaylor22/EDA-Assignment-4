@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588347556958.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3441568875",
+    "id" : "10D1328D",
+    "lastKnownWriteTime" : 1589229288,
+    "last_content_update" : 1589229288186,
+    "path" : "~/Masters - Local/EDA/Assignments/Assignment-4/Assignment-4-Functions.R",
+    "project_path" : "Assignment-4-Functions.R",
+    "properties" : {
+        "cursorPosition" : "166,2",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 12,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
