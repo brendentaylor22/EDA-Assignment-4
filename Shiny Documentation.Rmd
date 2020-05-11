@@ -1,0 +1,72 @@
+---
+title: "Shiny Documentation"
+author: "Brenden Taylor"
+date: "11/05/2020"
+output: 
+  bookdown::html_document2:
+    number_sections: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# How to Run the App
+
+To start, open the "app.R" file in "Shiny/app". Then, click "Run App" in the top right of the pane in RStudio. 
+
+You can also visit an online version [here](https://brendentaylor22.shinyapps.io/Assignment-4/){target="_blank"}.
+
+# Overview
+
+On running the app, you'll see a map with circles on it and a slider at the bottom of the page. You should also see a menu on the left of the screen. If you don't see the menu, click the 3 horizontal bars on the top of the screen and the menu will show/hide.
+
+The rest of this guide will run through each of the pages you can find in the menu.
+
+# Pages
+
+## Map
+
+The map shows geographic information and is interactive so you can zoom in and out, and if you hover over a circle, it will display information for that country.
+
+In bottom right corner of the map is a legend which gives you an indication of what the colours of the circles mean. This is to give a slightly more accurate indication of scale than simply looking at the size of the circles.
+
+In the top right corner of the map are the layer options. Hovering over this will show you some other metrics that can be displayed on the map. Select one by clicking it and the map will update.
+
+Lastly on this screen is the slider at the bottom. This allows you to drag and select a date, and the map will update to show data from that date. On the right of this box is a play button which will animate the data over time when you click it.
+
+### Example
+
+Changing to the "Cases per million" layer we can see that Europe seems to have quite a high conecntration of countries with a high number of cases per million citizens. Zooming in around Italy, we can see that the Vatican has an incredibly high number relative to its size. If we hover over the Vatican, we can see that that's because it only has a population of 800.
+
+## Graphs
+
+This page shows a few different line graphs: confirmed cases, deaths, recoveries and deaths per closed cases (this is equal to the number of deaths divided by the number of inactive cases i.e. deaths and recoveries).
+
+At the top of the page is an option to select a country (or countries). The default is to display the five countries with the highest number of confirmed cases. You can add/remove countries by typing/deleting in this bar and the graphs will update. Naturally, adding many countries will make it difficult to see which country is represented by which line.
+
+These graphs are interactive and so can be zoomed in/out and if you hover over a line you'll be able to see more information.
+
+### Example
+
+By typing "South Af" into the country selection bar and selecting South Africa (and then clicking outside of the bar to minimise it), we see that a line represneting South Africa is added to the plots. In three of the graphs, our line barely gets of the ground. This is probably because South Africa's numbers don't compare to the top five countries so the scale on the y-axis doesn't allow our line to be properly seen. So, we remove the top five countries from the selection bar (and add say, Saudi Arabia) and we can then see South Africa's curve much better.
+
+## Data Table
+
+Here we have to data in a more presentable format. On the left is a set of filters: a date range and a country selector.
+
+The date range allows us to select a range of data to display. The default is to display all of the data but this can be changed by clicking either the first or second date and choosing another valid date.
+
+The country selector works in the same way as [above][Graphs].
+
+At the bottom of the page is where we can navigate between pages in the data table, and at the top of the table is where we can click on a column name to sort according to that column.
+
+### Example
+
+Let's say we wanted to compare South Africa and San Marino, but only on the 7th of May 2020.
+
+First, we change both date selectors to 2020-05-07. This will then update the table to only select data from that specific day. Then, we select South Africa and San Marino in the country selector. We can then sort the data according to any of the columns in the table.
+
+## Data Info
+
+This page shows where we can download a copy of the latest dataset, and also shows when last the dataset was updated. There is also a link to the Github repository for the code used to create this Shiny app.

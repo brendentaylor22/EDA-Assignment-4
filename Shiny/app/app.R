@@ -14,7 +14,7 @@ options(scipen=999)
 dat = readRDS("ncov-dat.rds")
 dat = dat %>%
     select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil",
-             "X", "Y", "deaths_per_closed"))
+             "X", "Y", "deaths_per_closed", "pop"))
 
 ncov_newest = readRDS("ncov-newest.rds")
 ncov_newest = ncov_newest %>%
@@ -43,6 +43,7 @@ add_label = function(df){
         <tr><td>Deceased:</td><td align="right">', df$Deaths, '</td></tr>
         <tr><td>Concluded:</td><td align="right">', df$Deaths+df$Recovered, '</td></tr>
         <tr><td>Active:</td><td align="right">', df$Confirmed-(df$Deaths+df$Recovered), '</td></tr>
+        <tr><td>Population:</td><td align = "right">', df$pop, '</td></tr>
         </table>'
     )
     
@@ -79,10 +80,10 @@ pal_cases_per_mil = colorBin(
     reverse = T
 )
 
-top_5 = ncov_newest %>%
-    select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil")) %>%
-    top_n(n = 5, Confirmed) %>%
-    select(c("Country"))
+# top_5 = ncov_newest %>%
+#     select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil")) %>%
+#     top_n(n = 5, Confirmed) %>%
+#     select(c("Country"))
 
 
 
@@ -97,12 +98,12 @@ ui = dashboardPage(
             menuItem("Map",
                      tabName = "side_by_side",
                      icon = icon("globe-africa")),
-            menuItem("Data Table",
-                     tabName = "data_table",
-                     icon = icon("table")),
             menuItem("Graphs",
                      tabName = "graphs",
                      icon = icon("chart-bar")),
+            menuItem("Data Table",
+                     tabName = "data_table",
+                     icon = icon("table")),
             menuItem("Data Info",
                      tabName = "data_info",
                      icon = icon("question-circle"))

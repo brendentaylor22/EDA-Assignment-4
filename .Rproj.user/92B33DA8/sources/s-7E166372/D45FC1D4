@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1589202010747.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D45FC1D4",
+    "lastKnownWriteTime" : 1589204399,
+    "last_content_update" : 1589204399958,
+    "path" : "~/Masters - Local/EDA/Assignments/Assignment-4/Shiny Documentation.Rmd",
+    "project_path" : "Shiny Documentation.Rmd",
+    "properties" : {
+        "cursorPosition" : "62,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
