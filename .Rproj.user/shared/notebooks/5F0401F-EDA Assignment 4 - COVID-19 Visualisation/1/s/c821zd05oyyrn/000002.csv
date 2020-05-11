@@ -1,5 +1,8 @@
-"0","if(max(dat$Date) < Sys.Date()){
+"0","#If current data is old, get new data
+#I add 1 to max date because online data is only updated at the end of each day
+if(max(dat$Date) +1 < Sys.Date()){
   source(""get-clean-data.R"")
+  dat = readRDS(""Shiny/app/ncov-dat.rds"")
 }
 "
 "2","
