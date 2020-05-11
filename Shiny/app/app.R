@@ -6,12 +6,15 @@ library(lubridate)
 library(dplyr)
 library(sf)
 library(shinycssloaders)
-#library(gganimate)
 library(leaflet)
 library(DT)
 options(scipen=999)
 
+#Read in data
+#App loads much faster compared to updating data every time app is run
 dat = readRDS("ncov-dat.rds")
+
+#Remove geometry data to speed up processing
 dat = dat %>%
     select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil",
              "X", "Y", "deaths_per_closed", "pop"))
@@ -21,6 +24,7 @@ ncov_newest = ncov_newest %>%
     select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil",
              "X", "Y", "deaths_per_closed"))
 
+#Find 5 countries with highest number of confirmed cases
 dat_temp = dat %>%
     group_by(Country) %>%
     summarise(Confirmed = max(Confirmed)) %>%
@@ -32,9 +36,9 @@ dat_5 = dat %>%
     filter(Country %in% temp_names) %>%
     group_by(Country, Date)
 
-#dat = readRDS("Shiny/app/ncov-dat.rds")
-#ncov_newest = readRDS("Shiny/app/ncov-newest.rds")
-
+#Function to create label when country is hovered over in Leaflet map
+#Code based on code by Dr Edward Parker & Quentin Leclerc (https://vac-lshtm.shinyapps.io/ncov_tracker/)
+#https://github.com/eparker12/nCoV_tracker
 add_label = function(df){
     df$label = paste0(
         '<b>', df$Country, '</b><br>
@@ -52,6 +56,7 @@ add_label = function(df){
     return(df)
 }
 
+#Functions used to define palettes for basegroups for Leaflet map
 pal_confirmed = colorBin(
     palette = "viridis",
     domain = dat$Confirmed,
@@ -80,23 +85,23 @@ pal_cases_per_mil = colorBin(
     reverse = T
 )
 
-# top_5 = ncov_newest %>%
-#     select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil")) %>%
-#     top_n(n = 5, Confirmed) %>%
-#     select(c("Country"))
-
-
-
+pal_deaths_per_inactive = colorBin(
+    palette = "viridis",
+    domain = dat$deaths_per_closed,
+    bins = c(0, 2, 5, 10, 20, 50, 70, 100),
+    reverse = T
+)
 
 # Define UI for application that draws a histogram
-ui = dashboardPage(
+ui = dashboardPage( #Use shinydashboard package instead of standard layout
     dashboardHeader(
         title = "Assignment 4"
     ),
     dashboardSidebar(
-        sidebarMenu(
+        sidebarMenu( 
+            #Add menu items
             menuItem("Map",
-                     tabName = "side_by_side",
+                     tabName = "map",
                      icon = icon("globe-africa")),
             menuItem("Graphs",
                      tabName = "graphs",
@@ -111,23 +116,20 @@ ui = dashboardPage(
     ),
     dashboardBody(
         tabItems(
-            tabItem(tabName = "side_by_side",
+            #Map page
+            tabItem(tabName = "map",
+                    #First row has map
                     fluidRow(
                         column(
                             box(title = "",
+                                #Include loading animation
                                 withSpinner(leafletOutput("points"), type = 1),
                                 width = 12
                             ),
                             width = 12
-                        )#,
-                        # column(
-                        #     box(title = "",
-                        #         withSpinner(leafletOutput("fill"), type = 1),
-                        #         width = 12
-                        #     ),
-                        #     width = 6
-                        # )
+                        )
                     ),
+                    #Second row has date slide
                     fluidRow(
                         box(title = "",
                             sliderInput(
@@ -144,9 +146,11 @@ ui = dashboardPage(
                         )
                     )
             ),
+            #Data table page
             tabItem(tabName = "data_table",
                     h2("Data Table"),
                     fluidRow(
+                        #First column is for filters (date range and country selection)
                         column(
                             box(title = "Filter",
                                 dateRangeInput(inputId = "table_range",
@@ -167,6 +171,7 @@ ui = dashboardPage(
                             ),
                             width = 4
                         ),
+                        #Second column is for data table
                         column(
                             DT::dataTableOutput("table"),
                             width = 8
@@ -174,7 +179,9 @@ ui = dashboardPage(
                     )
                     
                     ),
+            #Graphs page
             tabItem(tabName = "graphs",
+                #First row is for country selection
                 fluidRow(
                     column(
                         box(title = "Country",
@@ -222,6 +229,7 @@ ui = dashboardPage(
                     )
                 )
             ),
+            #Page to show when data was last updated
             tabItem(tabName = "data_info",
                     h2("Data Info"),
                     withSpinner(uiOutput("info"), type = 1)
@@ -233,6 +241,7 @@ ui = dashboardPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     
+    #Reactive dataframe based on the date slider on the map page
     data_range = reactive({
         dat %>%
             filter(Date == input$date_slide)%>%
@@ -240,6 +249,8 @@ server <- function(input, output) {
             add_label()
     })
     
+    #Reactive dataframe used to display data in the table
+    #Based on the date range and the countries selected
     data_table = reactive({
         dat %>%
             select(c("Date", "Country", "Confirmed", "Recovered", "Deaths", "cases_per_mil")) %>%
@@ -248,22 +259,25 @@ server <- function(input, output) {
             filter(if(is.null(input$table_country)) TRUE else Country %in% input$table_country)
     })
     
+    #Reactive used to display graphs of countries selected
     data_countries = reactive({
         dat %>%
             filter(Country %in% input$plot_country)
     })
     
+    #Data table output
     output$table = DT::renderDataTable(
         data_table(),
         options = list(
             pageLength = 20,
-            dom = '<t>p'
+            dom = '<t>p' #Hides the search bar and includes page chooser at the bottom
         ),
-        rownames = F,
+        rownames = F, #Hide row names
         colnames = c("Date", "Country", "Confirmed", "Recovered", "Deaths", "Cases per million"),
         
     )
 
+    #Basic text output to display dataset location and date data was updated
     output$info = renderUI({
         tags$p("Download the latest dataset ", 
                tags$a(href = "https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv",
@@ -273,6 +287,8 @@ server <- function(input, output) {
                "This dataset contains data up to ", max(dat$Date), ".")
     })
     
+    #Next few chunks are used to render the graphs on the Graphs page
+    #They all use ggplotly and the data_countries() reactive dataframe
     output$cum_cases = renderPlotly({
         p = ggplot(data = data_countries()) +
                 geom_line(aes(x = Date,
@@ -317,52 +333,51 @@ server <- function(input, output) {
         ggplotly(p)
     })
     
+    #Code to render leaflet map
     output$points = renderLeaflet({
         p = leaflet() %>%
-            setMaxBounds(-180, -90, 180, 90) %>%
+            setMaxBounds(-180, -90, 180, 90) %>% 
             setView(lng = 0,
                     lat = 20, 
-                    zoom = 2) %>%
+                    zoom = 2) %>% #Set default view and zoom
             addTiles(options = tileOptions(
-                minZoom = 1
+                minZoom = 1 #Prevent user from scrolling too far out
             )) %>%
+            #Add options to change metric that's displayed on the map
             addLayersControl(
-                baseGroups = c("Confirmed Cases",
+                baseGroups = c("Confirmed cases",
                                "Deceased",
                                "Recovered",
-                               "Cases per million")
-            ) %>%
-            hideGroup("Deceased") %>%
-            hideGroup("Recovered") %>%
-            hideGroup("Cases per million")
+                               "Cases per million",
+                               "Deaths per inactive case")
+            )
     })
     
+    #Things inside this observe chunk are updated whenever the leaflet map is interacted with
     observe({
-        # req(input$animation_zoom)
+        #Get the current zoom level of the map
+        #Used to adjust size of the circles as the user zooms in/out
+        #Tried using addCircles() but it didn't look nearly as nice
         zoom_points = input$points_zoom
-        
-        # leafletProxy("fill", data = data_range()) %>%
-        #     addPolygons(data = data_range()$geometry,
-        #                 weight = 1,
-        #                 fillOpacity = 0.2,
-        #                 fillColor = ~colorQuantile("YlOrRd", domain = data_range()$Confirmed),
-        #                 group = "Confirmed Cases")
         
         leafletProxy("points", data = data_range()) %>%
             clearMarkers() %>%
             addCircleMarkers(
                 lng = ~X,
                 lat = ~Y,
-                radius = ~log2(Confirmed^(zoom_points/2)),
+                #Radius scale based on code by Christoph Schoenenberger (https://chschoenenberger.shinyapps.io/covid19_dashboard/)
+                #https://github.com/chschoenenberger/covid19_dashboard/blob/master/sections/content_overview/map.R
+                radius = ~log2(Confirmed^(zoom_points/2)), 
                 stroke = F,
                 fillOpacity = 0.6,
                 label = ~label,
-                group = "Confirmed Cases",
+                group = "Confirmed cases",
                 color = ~pal_confirmed(Confirmed)
             ) %>%
             addCircleMarkers(
                 lng = ~X,
                 lat = ~Y,
+                #See reference above
                 radius = ~log2(Deaths^(zoom_points/2)),
                 stroke = F,
                 fillOpacity = 0.6,
@@ -373,6 +388,7 @@ server <- function(input, output) {
             addCircleMarkers(
                 lng = ~X,
                 lat = ~Y,
+                #See reference above
                 radius = ~log2(Recovered^(zoom_points/2)),
                 stroke = F,
                 fillOpacity = 0.6,
@@ -383,18 +399,26 @@ server <- function(input, output) {
             addCircleMarkers(
                 lng = ~X,
                 lat = ~Y,
+                #See reference above
                 radius = ~log2(cases_per_mil^(zoom_points/2)),
                 stroke = F,
                 fillOpacity = 0.6,
                 label = ~label,
                 group = "Cases per million",
                 color = ~pal_cases_per_mil(cases_per_mil)
-            ) #%>%
-            # addLegend(
-            #     position = "bottomright",
-            #     pal = pal_confirmed,
-            #     values = ~Confirmed
-            # )
+            ) %>%
+            addCircleMarkers(
+                lng = ~X,
+                lat = ~Y,
+                #See reference above
+                radius = ~log2(deaths_per_closed^(zoom_points)),
+                stroke = F,
+                fillOpacity = 0.6,
+                label = ~label,
+                group = "Deaths per inactive case",
+                color = ~pal_deaths_per_inactive(deaths_per_closed)
+            )
+        
             
     })
     
@@ -402,14 +426,20 @@ server <- function(input, output) {
     
     
     #########Leaflet Issue #477
+    #Code is used to change the legend that is displayed on the map when a different basegroup is selected
+    #Based on code by Emil Mahler Larsen in Leaflet Issue #477
+    #https://github.com/rstudio/leaflet/issues/477#issuecomment-518984028
     observeEvent(input$points_groups,{
         leafletProxy("points") %>% 
-            removeControl(layerId = "Confirmed Cases") %>% 
+            #Remove legends already on map
+            removeControl(layerId = "Confirmed cases") %>% 
             removeControl(layerId = "Deceased") %>%
             removeControl(layerId = "Recovered") %>%
             removeControl(layerId = "Cases per million")
         
-        if ('Confirmed Cases' %in% isolate(input$points_groups)){
+        #If 'Confirmed cases' is selected:
+        #clear all legends and add new legend
+        if ('Confirmed cases' %in% isolate(input$points_groups)){
             leafletProxy('points', data = data_range()) %>% 
                 clearControls() %>%
                 addLegend(position = "bottomright",
@@ -435,7 +465,16 @@ server <- function(input, output) {
                 clearControls() %>%
                 addLegend(position = "bottomright",
                           pal = pal_cases_per_mil,
-                          values = ~cases_per_mil)
+                          values = ~cases_per_mil,
+                          title = "Cases per million")
+        }
+        else if ('Deaths per inactive case' %in% isolate(input$points_groups)){
+            leafletProxy('points', data = data_range()) %>% 
+                clearControls() %>%
+                addLegend(position = "bottomright",
+                          pal = pal_deaths_per_inactive,
+                          values = ~deaths_per_closed,
+                          title = "Deaths per inactive case")
         }
     })
 }
@@ -444,6 +483,6 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 
 
-# rsconnect::deployApp(getwd(), appName = "Assignment-4")
+#Used to deploy to shinyapps.io
 # rsconnect::deployApp("Shiny/app", appName = "Assignment-4")
 
