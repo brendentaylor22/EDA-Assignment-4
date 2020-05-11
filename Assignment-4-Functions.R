@@ -8,6 +8,9 @@ library(rnaturalearthdata)
 library(countrycode)
 library(sf)
 library(plotly)
+library(rgeos)
+library(googleVis)
+library(lwgeom)
 
 #Gets latest ncov data and converts date to date class
 get_ncov_data = function() {
